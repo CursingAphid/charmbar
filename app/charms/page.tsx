@@ -50,6 +50,15 @@ export default function CharmsPage() {
     loadData();
   }, []);
 
+  // Ensure a bracelet is always selected (defensive; store defaults to gold)
+  // This hook must come before any conditional returns to maintain hooks order
+  useEffect(() => {
+    if (!selectedBracelet && bracelets.length > 0) {
+      const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
+      if (gold) setBracelet(gold);
+    }
+  }, [selectedBracelet, setBracelet, bracelets]);
+
   // Show loading state
   if (loading || !selectedBracelet) {
     return (
@@ -61,14 +70,6 @@ export default function CharmsPage() {
       </div>
     );
   }
-
-  // Ensure a bracelet is always selected (defensive; store defaults to gold)
-  useEffect(() => {
-    if (!selectedBracelet && bracelets.length > 0) {
-      const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
-      if (gold) setBracelet(gold);
-    }
-  }, [selectedBracelet, setBracelet, bracelets]);
 
   const filteredCharms = useMemo(() => {
     const filtered = allCharms.filter((charm) => {
