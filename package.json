@@ -1,5 +1,5 @@
 {
-  "name": "charmbar",
+  "name": "charmbazaar",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "framer-motion": "^12.23.26",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-3d-icons": "^1.0.2",
+    "react-dom": "19.2.3",
+    "react-zoom-pan-pinch": "^3.7.0",
+    "three": "^0.182.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
