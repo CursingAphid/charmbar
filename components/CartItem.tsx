@@ -4,8 +4,7 @@ import Image from 'next/image';
 import { Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
-import { bracelets } from '@/data/products';
-import { getCharmImageUrl, type Charm } from '@/lib/db';
+import { getCharmImageUrl, type Charm, type Bracelet } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { useToast } from './ToastProvider';
@@ -13,12 +12,7 @@ import { useToast } from './ToastProvider';
 interface CartItemProps {
   cartItem: {
     id: string;
-    bracelet: {
-      id: string;
-      name: string;
-      price: number;
-      image: string;
-    };
+    bracelet: Bracelet;
     charms: Array<{
       id: string;
       charm: Charm;
@@ -32,8 +26,8 @@ export default function CartItem({ cartItem }: CartItemProps) {
   const setBracelet = useStore((state) => state.setBracelet);
 
   const handleEdit = () => {
-    const bracelet = bracelets.find((b) => b.id === cartItem.bracelet.id);
-    if (bracelet) setBracelet(bracelet);
+    // Use the bracelet data directly from the cart item
+    setBracelet(cartItem.bracelet);
     router.push('/charms');
   };
 

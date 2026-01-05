@@ -1,9 +1,18 @@
 import { create } from 'zustand';
-import { Bracelet, Charm, bracelets } from '@/data/products';
+import { Bracelet, Charm } from '@/lib/db';
 
-const DEFAULT_BRACELET_ID = 'bracelet-2'; // Gold Plated Chain
-const defaultBracelet =
-  bracelets.find((b) => b.id === DEFAULT_BRACELET_ID) ?? bracelets[0] ?? null;
+// Default bracelet - hardcoded for synchronous access
+const defaultBracelet: Bracelet = {
+  id: 'bracelet-2',
+  name: 'Gold Plated Chain',
+  description: 'Luxurious gold-plated chain with timeless appeal',
+  price: 34.99,
+  image: '/images/bracelets/bracelet_gold.png',
+  openImage: '/images/bracelets/bracelet_open.png',
+  grayscale: false,
+  color: 'Gold',
+  material: 'Gold Plated'
+};
 
 export interface SelectedCharm {
   id: string; // Unique instance ID
