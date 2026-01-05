@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBracelets, getCharms, getCharmsByCategory, getCharmCategories, debugDatabaseConnection, type Bracelet, type Charm } from '@/lib/db';
+import { getBracelets, getCharms, getCharmsByCategory, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
@@ -35,10 +35,6 @@ export default function CharmsPage() {
       try {
         console.log('📦 Charms page: Loading data from database...');
 
-        // First, run debug check
-        console.log('📦 Charms page: Running database debug check...');
-        await debugDatabaseConnection();
-
         const [braceletsData, charmsData, categoriesData] = await Promise.all([
           getBracelets(),
           getCharms(),
@@ -49,7 +45,6 @@ export default function CharmsPage() {
           charms: charmsData.length,
           categories: categoriesData
         });
-        console.log('📦 Charms page: All charms:', charmsData);
         setBracelets(braceletsData);
         setAllCharms(charmsData);
         setCharmCategories(categoriesData);
