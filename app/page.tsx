@@ -128,7 +128,7 @@ export default function Home() {
       </AnimatePresence>
       
       {/* Hero Section */}
-      <section className="relative w-full h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full h-[35vh] min-h-[280px] flex items-center justify-center overflow-hidden">
         {/* Soft Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-purple-100 to-pink-50" />
         
