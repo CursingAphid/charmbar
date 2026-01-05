@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Charm } from '@/data/products';
+import { getCharmImageUrl, getCharmBackgroundUrl } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +13,7 @@ import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
 import Charm3DIcon from './Charm3DIcon';
-import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl } from '@/lib/db';
+import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, downloadCharmGlb } from '@/lib/db';
 
 interface CharmCardProps {
   charm: Charm;
@@ -120,14 +121,14 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-          style={getCharmBackgroundUrl(charm) ? {
-            backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          } : undefined}
+      style={charm.background ? {
+        backgroundImage: `url(${charm.background})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      } : undefined}
         >
-          {(getCharmGlbUrl(charm) || charm.icon3d) && (isHovered || isInteracting) ? (
+          {false && (getCharmGlbUrl(charm) || charm.icon3d) && (isHovered || isInteracting) ? (
             <div className="w-full h-full">
               <Charm3DIcon
                 iconName={charm.icon3d}
@@ -141,7 +142,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-                src={getCharmImageUrl(charm)}
+                src={charm.image}
                 alt={charm.name}
                 fill
                 className="object-contain"
@@ -244,7 +245,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                     ) : (
                       <div className="relative w-full h-full flex items-center justify-center">
                         <Image
-                          src={getCharmImageUrl(charm)}
+                          src={charm.image}
                           alt={charm.name}
                           fill
                           className="object-contain"
