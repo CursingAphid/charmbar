@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useStore, SelectedCharm } from '@/store/useStore';
+import { getCharmImageUrl } from '@/lib/db';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, GripVertical, Trash2 } from 'lucide-react';
@@ -347,7 +348,7 @@ export default function PreviewCanvas() {
                     >
                       <div className="relative w-full h-full pointer-events-none">
                         <Image
-                          src={selectedCharm.charm.image}
+                          src={getCharmImageUrl(selectedCharm.charm)}
                           alt={selectedCharm.charm.name}
                           fill
                           className="object-contain drop-shadow-lg"
@@ -427,7 +428,7 @@ export default function PreviewCanvas() {
                       <GripVertical className="w-4 h-4 text-gray-400" />
                     </div>
                     <Image
-                      src={item.charm.image}
+                      src={getCharmImageUrl(item.charm)}
                       alt={item.charm.name}
                       width={32}
                       height={32}
@@ -595,7 +596,7 @@ export default function PreviewCanvas() {
                                   >
                                     <div className="relative w-full h-full pointer-events-none">
                                       <Image
-                                        src={selectedCharm.charm.image}
+                                        src={getCharmImageUrl(selectedCharm.charm)}
                                         alt={selectedCharm.charm.name}
                                         fill
                                         className="object-contain drop-shadow-lg"
@@ -675,7 +676,7 @@ export default function PreviewCanvas() {
                                 <GripVertical className="w-4 h-4 text-gray-400" />
                               </div>
                               <Image
-                                src={item.charm.image}
+                                src={getCharmImageUrl(item.charm)}
                                 alt={item.charm.name}
                                 width={32}
                                 height={32}

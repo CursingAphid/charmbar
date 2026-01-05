@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { getCharmsWithBackgrounds, type Charm } from '@/data/products';
+import { getCharmImageUrl } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
@@ -48,7 +49,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
         ) : (
           <div className="relative w-full h-full">
             <Image
-              src={charm.image}
+              src={getCharmImageUrl(charm)}
               alt={charm.name}
               fill
               className="object-contain"

@@ -5,6 +5,7 @@ import { Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { bracelets } from '@/data/products';
+import { getCharmImageUrl, type Charm } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { useToast } from './ToastProvider';
@@ -20,12 +21,7 @@ interface CartItemProps {
     };
     charms: Array<{
       id: string;
-      charm: {
-        id: string;
-        name: string;
-        price: number;
-        image: string;
-      };
+      charm: Charm;
     }>;
   };
 }
@@ -106,7 +102,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                     >
                       <div className="relative w-8 h-8">
                         <Image
-                          src={group.charm.image}
+                          src={getCharmImageUrl(group.charm)}
                           alt={group.charm.name}
                           fill
                           className="object-cover rounded"

@@ -12,6 +12,7 @@ import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
 import Charm3DIcon from './Charm3DIcon';
+import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl } from '@/lib/db';
 
 interface CharmCardProps {
   charm: Charm;
@@ -119,18 +120,18 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-          style={charm.background ? {
-            backgroundImage: `url(${charm.background})`,
+          style={getCharmBackgroundUrl(charm) ? {
+            backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           } : undefined}
         >
-          {(charm.glbPath || charm.icon3d) && (isHovered || isInteracting) ? (
+          {(getCharmGlbUrl(charm) || charm.icon3d) && (isHovered || isInteracting) ? (
             <div className="w-full h-full">
-              <Charm3DIcon 
-                iconName={charm.icon3d} 
-                glbPath={charm.glbPath}
+              <Charm3DIcon
+                iconName={charm.icon3d}
+                glbPath={getCharmGlbUrl(charm)}
                 size={1.2}
                 color="#ec4899"
                 spin={true}
@@ -140,7 +141,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-                src={charm.image}
+                src={getCharmImageUrl(charm)}
                 alt={charm.name}
                 fill
                 className="object-contain"
@@ -243,7 +244,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                     ) : (
                       <div className="relative w-full h-full flex items-center justify-center">
                         <Image
-                          src={charm.image}
+                          src={getCharmImageUrl(charm)}
                           alt={charm.name}
                           fill
                           className="object-contain"
