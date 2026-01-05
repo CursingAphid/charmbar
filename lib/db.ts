@@ -1,8 +1,12 @@
-// API base URL - use environment variable or default to localhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// API base URL - must point to the admin dashboard deployment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper function to make API calls
 async function apiCall(endpoint: string, options: RequestInit = {}) {
+  if (!API_BASE_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL environment variable is not configured. Please set it to the URL of your admin dashboard deployment.');
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
   const response = await fetch(url, {
     headers: {

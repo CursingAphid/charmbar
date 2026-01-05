@@ -32,20 +32,30 @@ This will create:
 
 ## Step 3: Environment Variables
 
-You need to add Supabase environment variables to your Vercel project:
+You need to add these environment variables to your Vercel project:
 
-1. In Supabase dashboard, go to **Settings** → **API**
-2. Copy these values:
-   - **Project URL** (anon public)
-   - **anon/public key**
+1. Go to your Vercel project dashboard
+2. Go to **Project Settings** → **Environment Variables**
+3. Add these variables:
 
-3. Go to your Vercel project dashboard
-4. Go to **Project Settings** → **Environment Variables**
-5. Add these variables:
-   - `NEXT_PUBLIC_SUPABASE_URL` = your Project URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/public key
+**Required for Admin Dashboard Integration:**
+- `NEXT_PUBLIC_API_URL` = URL where your admin dashboard is deployed (e.g., `https://your-admin-dashboard.vercel.app`)
+
+**For Supabase (if still using for other features):**
+- `NEXT_PUBLIC_SUPABASE_URL` = your Supabase Project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your Supabase anon/public key
 
 **Important**: Make sure to set these for **all environments** (Production, Preview, Development)
+
+### Example .env.local file:
+```env
+# Point to your admin dashboard deployment
+NEXT_PUBLIC_API_URL=https://your-admin-dashboard.vercel.app
+
+# Supabase credentials (if needed)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
 
 ## Step 4: Deploy
 
@@ -124,6 +134,11 @@ Your app now uses these database functions instead of static data:
 - Use the **Table Editor** to view/edit data manually
 - Check **Logs** for any database errors
 - Use **API Docs** to test endpoints
+
+### API URL Configuration
+- **"NEXT_PUBLIC_API_URL is not configured"** - Make sure you've set the environment variable pointing to your admin dashboard URL
+- **404 errors** - Verify the admin dashboard is deployed and the URL is correct
+- **CORS errors** - The admin dashboard may need to allow requests from your main app's domain
 
 ## Next Steps
 
