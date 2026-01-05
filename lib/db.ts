@@ -1,27 +1,28 @@
-// API base URL - must point to the admin dashboard deployment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { createClient } from '@supabase/supabase-js';
 
-// Helper function to make API calls
-async function apiCall(endpoint: string, options: RequestInit = {}) {
-  if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_URL environment variable is not configured. Please set it to the URL of your admin dashboard deployment.');
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Helper functions for binary data handling
+function byteaHexFromBase64(base64: string): string | null {
+  if (!base64) return null;
+  const buf = Buffer.from(base64, 'base64');
+  return `\\x${buf.toString('hex')}`;
+}
+
+function bufferFromByteaField(value: string): Buffer {
+  if (value.startsWith('\\x')) {
+    const raw = Buffer.from(value.slice(2), 'hex');
+    const asText = raw.toString('utf8');
+    // Check if it's base64 text stored as bytes
+    if (/^[A-Za-z0-9+/]+={0,2}$/.test(asText) && asText.length % 4 === 0) {
+      return Buffer.from(asText, 'base64');
+    }
+    return raw;
   }
-
-  const url = `${API_BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-
-  return response.json();
+  return Buffer.from(value, 'base64');
 }
 
 // Database interfaces
@@ -62,11 +63,13 @@ export interface Charm {
   background?: string;
 }
 
-// Helper functions for image URLs
+// Helper functions for creating image URLs from binary data
 export function getCharmImageUrl(charm: Charm): string {
   if (charm.image_data) {
-    // Use API endpoint for binary data
-    return `/api/charms/${charm.id}/image`;
+    // Create data URL from binary data
+    const buffer = bufferFromByteaField(charm.image_data);
+    const base64 = buffer.toString('base64');
+    return `data:${charm.image_mimetype};base64,${base64}`;
   }
   // Fallback to legacy image path
   return charm.image || '/images/placeholder.png';
@@ -74,8 +77,10 @@ export function getCharmImageUrl(charm: Charm): string {
 
 export function getCharmBackgroundUrl(charm: Charm): string | null {
   if (charm.background_data) {
-    // Use API endpoint for binary data
-    return `/api/charms/${charm.id}/background-image`;
+    // Create data URL from binary data
+    const buffer = bufferFromByteaField(charm.background_data);
+    const base64 = buffer.toString('base64');
+    return `data:${charm.background_mimetype};base64,${base64}`;
   }
   // Fallback to legacy background path
   return charm.background || null;
@@ -83,11 +88,29 @@ export function getCharmBackgroundUrl(charm: Charm): string | null {
 
 export function getCharmGlbUrl(charm: Charm): string | undefined {
   if (charm.glb_data) {
-    // Use API endpoint for binary data
-    return `/api/charms/${charm.id}/glb`;
+    // For GLB files, we'll need to create a download URL
+    // This is handled differently - return the data for download
+    return undefined; // GLB download is handled separately
   }
   // Fallback to legacy GLB path
   return charm.glbPath;
+}
+
+// Function to download GLB file from binary data
+export function downloadCharmGlb(charm: Charm): void {
+  if (charm.glb_data && typeof window !== 'undefined') {
+    const buffer = bufferFromByteaField(charm.glb_data);
+    const blob = new Blob([new Uint8Array(buffer)], { type: charm.glb_mimetype || 'model/gltf-binary' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = charm.glb_filename || 'model.glb';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Database functions
@@ -104,7 +127,12 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    const data = await apiCall('/api/charms');
+    const { data, error } = await supabase
+      .from('charms')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     return data || [];
   } catch (error) {
     console.error('Error fetching charms:', error);
@@ -118,7 +146,13 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
       return getCharms();
     }
 
-    const data = await apiCall(`/api/charms?category=${encodeURIComponent(category)}`);
+    const { data, error } = await supabase
+      .from('charms')
+      .select('*')
+      .eq('category', category)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     return data || [];
   } catch (error) {
     console.error('Error fetching charms by category:', error);
@@ -128,9 +162,16 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
 
 export async function getCharmCategories(): Promise<string[]> {
   try {
-    // For now, return static categories since the API doesn't have a dedicated categories endpoint
-    // TODO: Add categories endpoint if needed
-    return ['All', 'Symbols', 'Nature'];
+    const { data, error } = await supabase
+      .from('charms')
+      .select('category')
+      .order('category');
+
+    if (error) throw error;
+
+    // Get unique categories
+    const categories: string[] = Array.from(new Set(data?.map((item: any) => item.category as string).filter(Boolean) || []));
+    return ['All', ...categories];
   } catch (error) {
     console.error('Error fetching charm categories:', error);
     return ['All'];
@@ -149,7 +190,13 @@ export async function getBraceletById(id: string): Promise<Bracelet | null> {
 
 export async function getCharmById(id: string): Promise<Charm | null> {
   try {
-    const data = await apiCall(`/api/charms/${id}`);
+    const { data, error } = await supabase
+      .from('charms')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
     return data;
   } catch (error) {
     console.error('Error fetching charm by ID:', error);
@@ -159,9 +206,15 @@ export async function getCharmById(id: string): Promise<Charm | null> {
 
 export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
   try {
-    // Get all charms and filter those with background data
-    const charms = await getCharms();
-    return charms.filter(charm => charm.background_data).slice(0, 3);
+    const { data, error } = await supabase
+      .from('charms')
+      .select('*')
+      .not('background_data', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error('Error fetching charms with backgrounds:', error);
     return [];

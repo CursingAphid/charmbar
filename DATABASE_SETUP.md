@@ -1,61 +1,20 @@
 # Database Setup Guide
 
-This guide will help you set up **Supabase** (PostgreSQL) for your Charm Bazaar app.
+**✅ Your Supabase database is already set up and ready to use!**
 
-## Step 1: Create Supabase Project
+The app now connects directly to your Supabase database at `https://axuyosjuhsmzefovydby.supabase.co` using the provided credentials.
 
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Click **"New Project"**
-3. Choose your organization
-4. Fill in project details:
-   - **Name**: `Charm Bazaar` (or your choice)
-   - **Database Password**: Choose a strong password
-   - **Region**: Select the closest region to your users
-5. Click **"Create new project"**
+## Environment Variables
 
-Wait 2-3 minutes for the project to be fully provisioned.
+Your app is configured to use these Supabase credentials:
 
-## Step 2: Run Database Schema
-
-After creating the project, you need to run the schema to create tables and insert sample data:
-
-1. In your Supabase dashboard, go to your project
-2. Click **"SQL Editor"** in the left sidebar
-3. Click **"New query"**
-4. Copy and paste the contents of `schema.sql` from your project
-5. Click **"Run"** to execute the schema
-
-This will create:
-- `bracelets` table with 2 sample bracelets
-- `charms` table with 7 sample charms
-- Row Level Security (RLS) policies for security
-
-## Step 3: Environment Variables
-
-You need to add these environment variables to your Vercel project:
-
-1. Go to your Vercel project dashboard
-2. Go to **Project Settings** → **Environment Variables**
-3. Add these variables:
-
-**Required for Admin Dashboard Integration:**
-- `NEXT_PUBLIC_API_URL` = URL where your admin dashboard is deployed (e.g., `https://your-admin-dashboard.vercel.app`)
-
-**For Supabase (if still using for other features):**
-- `NEXT_PUBLIC_SUPABASE_URL` = your Supabase Project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your Supabase anon/public key
-
-**Important**: Make sure to set these for **all environments** (Production, Preview, Development)
-
-### Example .env.local file:
 ```env
-# Point to your admin dashboard deployment
-NEXT_PUBLIC_API_URL=https://your-admin-dashboard.vercel.app
-
-# Supabase credentials (if needed)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SUPABASE_URL="https://axuyosjuhsmzefovydby.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dXlvc2p1aHNtemVmb3Z5ZGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2NDA2MzksImV4cCI6MjA4MzIxNjYzOX0.yxL9-pHhRP83Y3cuQ1tnxd2w6PIBEBk0VVrhFB9X-CY"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dXlvc2p1aHNtemVmb3Z5ZGJ5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzY0MDYzOSwiZXhwIjoyMDgzMjE2NjM5fQ.z8VWTZD2VUHSUlOGV2Om5YMg4PQU_FHXfPJCgTvupls"
 ```
+
+**For Vercel deployment**, add these to your project settings under Environment Variables.
 
 ## Step 4: Deploy
 
