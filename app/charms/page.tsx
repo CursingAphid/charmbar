@@ -59,18 +59,6 @@ export default function CharmsPage() {
     }
   }, [selectedBracelet, setBracelet, bracelets]);
 
-  // Show loading state
-  if (loading || !selectedBracelet) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading bracelet...</p>
-        </div>
-      </div>
-    );
-  }
-
   const filteredCharms = useMemo(() => {
     const filtered = allCharms.filter((charm) => {
       const matchesCategory = selectedCategory === 'All' || charm.category === selectedCategory;
@@ -98,6 +86,18 @@ export default function CharmsPage() {
       return 0;
     });
   }, [allCharms, selectedCategory, searchQuery, selectedCharms]);
+
+  // Show loading state
+  if (loading || !selectedBracelet) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading bracelet...</p>
+        </div>
+      </div>
+    );
+  }
 
   const { showToast } = useToast();
 
