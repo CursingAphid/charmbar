@@ -1,42 +1,51 @@
 # Database Setup Guide
 
-This guide will help you set up Vercel Postgres for your Charm Bazaar app.
+This guide will help you set up **Supabase** (PostgreSQL) for your Charm Bazaar app.
 
-## Step 1: Create Vercel Postgres Database
+## Step 1: Create Supabase Project
 
-1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
-2. Select your Charm Bazaar project
-3. Go to the **Storage** tab
-4. Click **Create Database** → **Postgres**
-5. Choose your database name (e.g., `charmbazaar-db`)
-6. Select your region (choose the closest to your users)
-7. Click **Create**
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+2. Click **"New Project"**
+3. Choose your organization
+4. Fill in project details:
+   - **Name**: `Charm Bazaar` (or your choice)
+   - **Database Password**: Choose a strong password
+   - **Region**: Select the closest region to your users
+5. Click **"Create new project"**
+
+Wait 2-3 minutes for the project to be fully provisioned.
 
 ## Step 2: Run Database Schema
 
-After creating the database, you need to run the schema to create tables and insert sample data:
+After creating the project, you need to run the schema to create tables and insert sample data:
 
-1. In your Vercel dashboard, go to your database
-2. Click the **Query** tab
-3. Copy and paste the contents of `schema.sql` from your project
-4. Click **Run** to execute the schema
+1. In your Supabase dashboard, go to your project
+2. Click **"SQL Editor"** in the left sidebar
+3. Click **"New query"**
+4. Copy and paste the contents of `schema.sql` from your project
+5. Click **"Run"** to execute the schema
 
 This will create:
 - `bracelets` table with 2 sample bracelets
 - `charms` table with 7 sample charms
-- Proper indexes for performance
+- Row Level Security (RLS) policies for security
 
 ## Step 3: Environment Variables
 
-Vercel automatically creates the `POSTGRES_URL` environment variable for your database. You can verify this in:
+You need to add Supabase environment variables to your Vercel project:
 
-1. Go to your project settings
-2. Click **Environment Variables**
-3. You should see `POSTGRES_URL` automatically added
+1. In Supabase dashboard, go to **Settings** → **API**
+2. Copy these values:
+   - **Project URL** (anon public)
+   - **anon/public key**
 
-If you need to add it manually:
-- Copy the connection string from your database dashboard
-- Add it as `POSTGRES_URL` in your environment variables
+3. Go to your Vercel project dashboard
+4. Go to **Project Settings** → **Environment Variables**
+5. Add these variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` = your Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/public key
+
+**Important**: Make sure to set these for **all environments** (Production, Preview, Development)
 
 ## Step 4: Deploy
 
@@ -85,20 +94,36 @@ Your app now uses these database functions instead of static data:
 - `getCharmsWithBackgrounds()` - Get charms that have background images
 - `getBraceletById(id)` / `getCharmById(id)` - Fetch individual items
 
+## Supabase Features You Get
+
+- **Real-time subscriptions** - Live updates when data changes
+- **Built-in authentication** - User accounts ready to add
+- **File storage** - Upload product images
+- **Edge functions** - Serverless API endpoints
+- **Dashboard** - Visual database management
+- **API documentation** - Auto-generated docs
+
 ## Troubleshooting
 
-### Build Errors
-If you see "missing_connection_string" errors during build, that's normal - the database connection is only available at runtime.
+### Environment Variable Issues
+- Make sure variables are named exactly: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Check that they're set for all environments (Production, Preview, Development)
+- The `NEXT_PUBLIC_` prefix makes them available in the browser
 
 ### Database Connection Issues
-- Verify `POSTGRES_URL` environment variable is set in Vercel
-- Check that your database is in the same region as your Vercel project
-- Ensure the database isn't paused (check Vercel dashboard)
+- Verify your Supabase project is active (not paused)
+- Check that the anon key has the right permissions
+- Ensure you're using the correct project URL from Supabase dashboard
 
 ### Data Not Loading
-- Run the schema.sql in your database query editor
-- Check Vercel function logs for database errors
-- Verify environment variables are deployed
+- Run the `schema.sql` in Supabase SQL Editor
+- Check browser console for JavaScript errors
+- Verify environment variables are correctly set in Vercel
+
+### Supabase Dashboard
+- Use the **Table Editor** to view/edit data manually
+- Check **Logs** for any database errors
+- Use **API Docs** to test endpoints
 
 ## Next Steps
 

@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS charms (
 CREATE INDEX IF NOT EXISTS idx_charms_category ON charms(category);
 CREATE INDEX IF NOT EXISTS idx_charms_background ON charms(background);
 
+-- Enable Row Level Security (RLS)
+ALTER TABLE bracelets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE charms ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for public read access
+CREATE POLICY "Allow public read access on bracelets" ON bracelets FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on charms" ON charms FOR SELECT USING (true);
+
 -- Insert sample bracelet data
 INSERT INTO bracelets (id, name, description, price, image, openImage, grayscale, color, material) VALUES
 ('bracelet-1', 'Classic Silver Chain', 'Elegant silver chain bracelet perfect for any occasion', 29.99, '/images/bracelets/bracelet_silver.png', '/images/bracelets/bracelet_open.png', true, 'Silver', 'Sterling Silver'),
