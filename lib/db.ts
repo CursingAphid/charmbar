@@ -136,15 +136,21 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
+    console.log('🔍 getCharms: Fetching charms from database...');
     const { data, error } = await supabase
       .from('charms')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ getCharms: Database error:', error);
+      throw error;
+    }
+
+    console.log('✅ getCharms: Retrieved', data?.length || 0, 'charms:', data);
     return data || [];
   } catch (error) {
-    console.error('Error fetching charms:', error);
+    console.error('❌ getCharms: Error fetching charms:', error);
     return [];
   }
 }
@@ -215,6 +221,7 @@ export async function getCharmById(id: string): Promise<Charm | null> {
 
 export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
   try {
+    console.log('🎨 getCharmsWithBackgrounds: Fetching charms with backgrounds...');
     const { data, error } = await supabase
       .from('charms')
       .select('*')
@@ -222,10 +229,15 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
       .order('created_at', { ascending: false })
       .limit(3);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ getCharmsWithBackgrounds: Database error:', error);
+      throw error;
+    }
+
+    console.log('✅ getCharmsWithBackgrounds: Found', data?.length || 0, 'charms with backgrounds:', data);
     return data || [];
   } catch (error) {
-    console.error('Error fetching charms with backgrounds:', error);
+    console.error('❌ getCharmsWithBackgrounds: Error:', error);
     return [];
   }
 }

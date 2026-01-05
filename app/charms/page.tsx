@@ -33,11 +33,18 @@ export default function CharmsPage() {
   useEffect(() => {
     async function loadData() {
       try {
+        console.log('📦 Charms page: Loading data from database...');
         const [braceletsData, charmsData, categoriesData] = await Promise.all([
           getBracelets(),
           getCharms(),
           getCharmCategories()
         ]);
+        console.log('📦 Charms page: Data loaded -', {
+          bracelets: braceletsData.length,
+          charms: charmsData.length,
+          categories: categoriesData
+        });
+        console.log('📦 Charms page: All charms:', charmsData);
         setBracelets(braceletsData);
         setAllCharms(charmsData);
         setCharmCategories(categoriesData);

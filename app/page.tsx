@@ -102,10 +102,13 @@ export default function Home() {
   useEffect(() => {
     async function loadFeaturedCharms() {
       try {
+        console.log('🏠 Home page: Loading featured charms...');
         const charms = await getCharmsWithBackgrounds();
+        console.log('🏠 Home page: Featured charms loaded:', charms.length, 'charms');
+        console.log('🏠 Home page: Setting first 3:', charms.slice(0, 3));
         setFeaturedCharms(charms.slice(0, 3));
       } catch (error) {
-        console.error('Error loading featured charms:', error);
+        console.error('🏠 Home page: Error loading featured charms:', error);
         setFeaturedCharms([]);
       }
     }
