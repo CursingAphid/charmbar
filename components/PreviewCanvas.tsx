@@ -235,12 +235,12 @@ export default function PreviewCanvas() {
       {/* Stage */}
       <div className="relative flex-1 min-h-0">
         {/* Controls */}
-        <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 flex gap-1 sm:gap-2">
           <button
             onClick={handleZoomIn}
             disabled={!canZoomIn}
             className={[
-              'p-2 bg-white rounded-lg shadow-md transition-colors',
+              'p-1.5 sm:p-2 bg-white rounded-lg shadow-md transition-colors',
               canZoomIn ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed',
             ].join(' ')}
             aria-label="Zoom in"
@@ -252,7 +252,7 @@ export default function PreviewCanvas() {
             onClick={handleZoomOut}
             disabled={!canZoomOut}
             className={[
-              'p-2 bg-white rounded-lg shadow-md transition-colors',
+              'p-1.5 sm:p-2 bg-white rounded-lg shadow-md transition-colors',
               canZoomOut ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed',
             ].join(' ')}
             aria-label="Zoom out"
@@ -264,7 +264,7 @@ export default function PreviewCanvas() {
             onClick={handleResetZoom}
             disabled={zoom <= 1.0001 && pan.x === 0 && pan.y === 0}
             className={[
-              'p-2 bg-white rounded-lg shadow-md transition-colors',
+              'p-1.5 sm:p-2 bg-white rounded-lg shadow-md transition-colors',
               zoom > 1.0001 || pan.x !== 0 || pan.y !== 0 ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed',
             ].join(' ')}
             aria-label="Reset zoom"
@@ -274,7 +274,7 @@ export default function PreviewCanvas() {
           </button>
           <button
             onClick={handleToggleExpanded}
-            className="p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+            className="p-1.5 sm:p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors"
             aria-label={isExpanded ? 'Close expanded view' : 'Expand preview'}
             type="button"
           >
@@ -286,10 +286,10 @@ export default function PreviewCanvas() {
           </button>
         </div>
 
-        <div className="w-full h-full flex items-center justify-center p-3">
+        <div className="w-full h-full flex items-center justify-center p-2 sm:p-3">
           <div
             ref={viewportRef}
-            className="w-full max-w-[1000px] aspect-[800/350] rounded-lg overflow-hidden bg-pink-50 relative"
+            className="w-full max-w-[1000px] aspect-[800/420] sm:aspect-[800/350] rounded-lg overflow-hidden bg-pink-50 relative"
           >
             <motion.div
               key={`${selectedBracelet.openImage || selectedBracelet.image}:${totalCharms}`}

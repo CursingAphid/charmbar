@@ -65,7 +65,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Checkout Form */}
             <div className="lg:col-span-2">
-              <Card className="p-6">
+              <Card className="p-4 sm:p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <User className="w-5 h-5 text-pink-500" />
                   Shipping Information
@@ -232,7 +232,8 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="pt-4">
+                  {/* Mobile: keep primary CTA reachable while scrolling long forms */}
+                  <div className="pt-4 sm:pt-6 sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 bg-white/95 backdrop-blur border-t border-gray-100 sm:border-t-0">
                     <Button
                       type="submit"
                       fullWidth
@@ -260,7 +261,7 @@ export default function CheckoutPage() {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <Card className="p-6">
+                <Card className="p-4 sm:p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
 
                   <div className="space-y-4 mb-6">

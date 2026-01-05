@@ -43,7 +43,8 @@ export default function CartPage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Bottom padding on mobile so the fixed checkout bar never covers content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-32 sm:pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,7 +84,7 @@ export default function CartPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm sticky bottom-4"
+            className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm sm:sticky sm:bottom-4"
           >
             <div className="space-y-4 mb-6">
               <div className="flex justify-between text-lg">
@@ -114,6 +115,23 @@ export default function CartPage() {
           </motion.div>
         </motion.div>
       </main>
+
+      {/* Mobile fixed checkout bar (keeps CTA reachable) */}
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">${getCartTotal().toFixed(2)}</p>
+            <p className="text-xs text-gray-600 truncate">Total</p>
+          </div>
+          <Button
+            onClick={() => router.push('/checkout')}
+            className="flex-1 flex items-center justify-center gap-2"
+          >
+            Checkout
+            <ShoppingBag className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center gap-2 min-w-0">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
@@ -25,15 +25,15 @@ export default function Navbar() {
             >
               ✨
             </motion.div>
-            <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent truncate max-w-[10.5rem] sm:max-w-none">
               charmbazaar
             </span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-1 sm:gap-3">
             <Link
               href="/"
-              className="p-2 text-gray-600 hover:text-pink-600 transition-colors"
+              className="h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-gray-600 hover:text-pink-600 hover:bg-pink-50/50 transition-colors"
               title={t('nav.home')}
             >
               <Home className="w-5 h-5" />
@@ -43,8 +43,9 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="p-2 text-gray-600 hover:text-pink-600 transition-colors relative"
+                className="h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-gray-600 hover:text-pink-600 hover:bg-pink-50/50 transition-colors relative"
                 title={t('nav.language')}
+                type="button"
               >
                 <Languages className="w-5 h-5" />
               </button>
@@ -67,6 +68,7 @@ export default function Navbar() {
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-pink-50 transition-colors ${
                         language === 'nl' ? 'bg-pink-50 text-pink-600 font-medium' : 'text-gray-700'
                       }`}
+                      type="button"
                     >
                       🇳🇱 Nederlands
                     </button>
@@ -78,6 +80,7 @@ export default function Navbar() {
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-pink-50 transition-colors ${
                         language === 'en' ? 'bg-pink-50 text-pink-600 font-medium' : 'text-gray-700'
                       }`}
+                      type="button"
                     >
                       🇬🇧 English
                     </button>
@@ -88,7 +91,7 @@ export default function Navbar() {
             
             <Link
               href="/cart"
-              className="relative p-2 text-gray-600 hover:text-pink-600 transition-colors"
+              className="relative h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-gray-600 hover:text-pink-600 hover:bg-pink-50/50 transition-colors"
               title={t('nav.cart')}
             >
               <ShoppingCart className="w-5 h-5" />

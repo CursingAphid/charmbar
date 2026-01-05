@@ -87,7 +87,8 @@ export default function CharmsPage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Extra bottom padding on mobile so the fixed bottom bar never covers content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-28 lg:pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -128,7 +129,7 @@ export default function CharmsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Side - Charms Grid */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 order-2 lg:order-1">
             {/* Search and Filters */}
             <div className="mb-6 space-y-4">
               {/* Search Bar */}
@@ -191,7 +192,7 @@ export default function CharmsPage() {
           </div>
 
           {/* Right Side - Preview */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 order-1 lg:order-2">
             <div className="lg:sticky lg:top-24">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('charms.preview.title')}</h2>
@@ -258,7 +259,7 @@ export default function CharmsPage() {
 
       {/* Mobile Sticky Button */}
       {selectedCharms.length > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-40">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-gray-900">
