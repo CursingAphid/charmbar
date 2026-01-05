@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Charm } from '@/data/products';
-import { getCharmImageUrl } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +11,8 @@ import { X, Maximize2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
+import Charm3DIcon from './Charm3DIcon';
+import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, downloadCharmGlb } from '@/lib/db';
 
 interface CharmCardProps {
   charm: Charm;
@@ -119,14 +120,14 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-      style={charm.background ? {
-        backgroundImage: `url(${charm.background})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      } : undefined}
+          style={getCharmBackgroundUrl(charm) ? {
+            backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          } : undefined}
         >
-          {false && (getCharmGlbUrl(charm) || charm.icon3d) && (isHovered || isInteracting) ? (
+          {getCharmGlbUrl(charm) && (isHovered || isInteracting) ? (
             <div className="w-full h-full">
               <Charm3DIcon
                 iconName={charm.icon3d}
@@ -220,19 +221,18 @@ export default function CharmCard({ charm }: CharmCardProps) {
                   {/* Charm display */}
                   <div
                     className="relative h-[60vh] flex items-center justify-center p-8"
-                    style={charm.background ? {
-                      backgroundImage: `url(${charm.background})`,
+                    style={getCharmBackgroundUrl(charm) ? {
+                      backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat'
                     } : { background: 'linear-gradient(to-br, #f8fafc, #e2e8f0)' }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {(charm.glbPath || charm.icon3d) ? (
+                    {getCharmGlbUrl(charm) ? (
                       <div className="w-full h-full">
                         <Charm3DIcon
-                          iconName={charm.icon3d}
-                          glbPath={charm.glbPath}
+                          glbPath={getCharmGlbUrl(charm)}
                           size={1.5}
                           color="#ec4899"
                           spin={true}
