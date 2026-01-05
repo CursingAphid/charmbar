@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { bracelets, charms, charmCategories } from '@/data/products';
+import { getBracelets, getCharms, getCharmsByCategory, getCharmCategories, type Bracelet, type Charm } from '@/data/products';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
@@ -22,8 +22,36 @@ export default function CharmsPage() {
   const getTotalPrice = useStore((state) => state.getTotalPrice);
   const { t } = useLanguage();
 
-  // Show loading state if no bracelet is selected yet
-  if (!selectedBracelet) {
+  const [bracelets, setBracelets] = useState<Bracelet[]>([]);
+  const [allCharms, setAllCharms] = useState<Charm[]>([]);
+  const [charmCategories, setCharmCategories] = useState<string[]>(['All']);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Load data from database
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [braceletsData, charmsData, categoriesData] = await Promise.all([
+          getBracelets(),
+          getCharms(),
+          getCharmCategories()
+        ]);
+        setBracelets(braceletsData);
+        setAllCharms(charmsData);
+        setCharmCategories(categoriesData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Show loading state
+  if (loading || !selectedBracelet) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -34,19 +62,16 @@ export default function CharmsPage() {
     );
   }
 
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
   // Ensure a bracelet is always selected (defensive; store defaults to gold)
   useEffect(() => {
-    if (!selectedBracelet) {
+    if (!selectedBracelet && bracelets.length > 0) {
       const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
       if (gold) setBracelet(gold);
     }
-  }, [selectedBracelet, setBracelet]);
+  }, [selectedBracelet, setBracelet, bracelets]);
 
   const filteredCharms = useMemo(() => {
-    const filtered = charms.filter((charm) => {
+    const filtered = allCharms.filter((charm) => {
       const matchesCategory = selectedCategory === 'All' || charm.category === selectedCategory;
       const matchesSearch =
         charm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,7 +96,7 @@ export default function CharmsPage() {
 
       return 0;
     });
-  }, [selectedCategory, searchQuery, selectedCharms]);
+  }, [allCharms, selectedCategory, searchQuery, selectedCharms]);
 
   const { showToast } = useToast();
 

@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { charms } from '@/data/products';
+import { getCharmsWithBackgrounds, type Charm } from '@/data/products';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
@@ -12,7 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MousePointerClick, ShoppingBag, Truck, CheckCircle } from 'lucide-react';
 import Charm3DIcon from '@/components/Charm3DIcon';
 import { useToast } from '@/components/ToastProvider';
-import { useState } from 'react';
 
 function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: { 
   charm: any; 
@@ -91,13 +91,20 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
 }
 
 export default function Home() {
+  const [featuredCharms, setFeaturedCharms] = useState<Charm[]>([]);
   const router = useRouter();
   const addCharm = useStore((state) => state.addCharm);
   const selectedCharms = useStore((state) => state.selectedCharms);
   const { t } = useLanguage();
   const { showToast } = useToast();
 
-  const featuredCharms = charms.filter(charm => charm.background).slice(0, 3);
+  useEffect(() => {
+    async function loadFeaturedCharms() {
+      const charms = await getCharmsWithBackgrounds();
+      setFeaturedCharms(charms.slice(0, 3));
+    }
+    loadFeaturedCharms();
+  }, []);
 
   return (
     <div className="min-h-screen">
