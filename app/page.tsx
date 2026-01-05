@@ -128,7 +128,7 @@ export default function Home() {
       </AnimatePresence>
       
       {/* Hero Section */}
-      <section className="relative w-full h-[32vh] sm:h-[35vh] min-h-[260px] sm:min-h-[280px] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full h-[45vh] sm:h-[35vh] min-h-[350px] sm:min-h-[280px] flex items-center justify-center overflow-hidden">
         {/* Soft Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-purple-100 to-pink-50" />
         
@@ -298,19 +298,19 @@ export default function Home() {
         </div>
         
         {/* Hero Content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-4 text-center flex flex-col items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-4 sm:mb-6 flex justify-center"
+            className="mb-6 sm:mb-6 flex justify-center"
           >
             <Image
               src="/images/charm_bazaar_logo.png?v=3"
               alt="Charm Bazaar"
               width={900}
               height={550}
-              className="w-auto h-auto max-w-[92vw] sm:max-w-[95vw] md:max-w-[900px] drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
+              className="w-auto h-auto max-w-[85vw] sm:max-w-[95vw] md:max-w-[900px] drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
               style={{ marginTop: '0', marginBottom: '0' }}
               priority
               unoptimized
