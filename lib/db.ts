@@ -21,17 +21,30 @@ function byteaHexFromBase64(base64: string): string | null {
   return `\\x${buf.toString('hex')}`;
 }
 
-function bufferFromByteaField(value: string): Buffer {
+function bufferFromByteaField(value: string): Uint8Array {
   if (value.startsWith('\\x')) {
-    const raw = Buffer.from(value.slice(2), 'hex');
-    const asText = raw.toString('utf8');
-    // Check if it's base64 text stored as bytes
-    if (/^[A-Za-z0-9+/]+={0,2}$/.test(asText) && asText.length % 4 === 0) {
-      return Buffer.from(asText, 'base64');
+    // Handle PostgreSQL bytea hex format (\x...)
+    const hexString = value.slice(2);
+    const uint8Array = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+      uint8Array[i / 2] = parseInt(hexString.substr(i, 2), 16);
     }
-    return raw;
+    return uint8Array;
   }
-  return Buffer.from(value, 'base64');
+
+  // Handle base64 string
+  if (typeof window === 'undefined') {
+    // Server-side: use Buffer
+    return new Uint8Array(Buffer.from(value, 'base64'));
+  } else {
+    // Client-side: use atob and Uint8Array
+    const binaryString = atob(value);
+    const uint8Array = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      uint8Array[i] = binaryString.charCodeAt(i);
+    }
+    return uint8Array;
+  }
 }
 
 // Database interfaces
@@ -76,8 +89,8 @@ export interface Charm {
 export function getCharmImageUrl(charm: Charm): string {
   if (charm.image_data) {
     // Create data URL from binary data
-    const buffer = bufferFromByteaField(charm.image_data);
-    const base64 = buffer.toString('base64');
+    const uint8Array = bufferFromByteaField(charm.image_data);
+    const base64 = uint8ArrayToBase64(uint8Array);
     return `data:${charm.image_mimetype};base64,${base64}`;
   }
   // Fallback to legacy image path
@@ -87,19 +100,33 @@ export function getCharmImageUrl(charm: Charm): string {
 export function getCharmBackgroundUrl(charm: Charm): string | null {
   if (charm.background_data) {
     // Create data URL from binary data
-    const buffer = bufferFromByteaField(charm.background_data);
-    const base64 = buffer.toString('base64');
+    const uint8Array = bufferFromByteaField(charm.background_data);
+    const base64 = uint8ArrayToBase64(uint8Array);
     return `data:${charm.background_mimetype};base64,${base64}`;
   }
   // Fallback to legacy background path
   return charm.background || null;
 }
 
+// Helper function to convert Uint8Array to base64
+function uint8ArrayToBase64(uint8Array: Uint8Array): string {
+  if (typeof window === 'undefined') {
+    // Server-side: use Buffer
+    return Buffer.from(uint8Array).toString('base64');
+  } else {
+    // Client-side: use btoa
+    let binary = '';
+    uint8Array.forEach(byte => binary += String.fromCharCode(byte));
+    return btoa(binary);
+  }
+}
+
 export function getCharmGlbUrl(charm: Charm): string | undefined {
   if (charm.glb_data) {
-    // For GLB files, we'll need to create a download URL
-    // This is handled differently - return the data for download
-    return undefined; // GLB download is handled separately
+    // Create data URL from binary GLB data for 3D viewer
+    const uint8Array = bufferFromByteaField(charm.glb_data);
+    const base64 = uint8ArrayToBase64(uint8Array);
+    return `data:${charm.glb_mimetype || 'model/gltf-binary'};base64,${base64}`;
   }
   // Fallback to legacy GLB path
   return charm.glbPath;
@@ -108,8 +135,8 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
 // Function to download GLB file from binary data
 export function downloadCharmGlb(charm: Charm): void {
   if (charm.glb_data && typeof window !== 'undefined') {
-    const buffer = bufferFromByteaField(charm.glb_data);
-    const blob = new Blob([new Uint8Array(buffer)], { type: charm.glb_mimetype || 'model/gltf-binary' });
+    const uint8Array = bufferFromByteaField(charm.glb_data);
+    const blob = new Blob([uint8Array], { type: charm.glb_mimetype || 'model/gltf-binary' });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
