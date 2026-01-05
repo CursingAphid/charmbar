@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Charm } from '@/data/products';
+import { getCharmImageUrl } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -139,7 +140,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-                src={charm.image}
+                src={getCharmImageUrl(charm)}
                 alt={charm.name}
                 fill
                 className="object-contain"
@@ -242,7 +243,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                     ) : (
                       <div className="relative w-full h-full flex items-center justify-center">
                         <Image
-                          src={charm.image}
+                          src={getCharmImageUrl(charm)}
                           alt={charm.name}
                           fill
                           className="object-contain"

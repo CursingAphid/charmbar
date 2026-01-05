@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { bracelets, charms, charmCategories, type Bracelet, type Charm } from '@/data/products';
+import { getBracelets, getCharms, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
@@ -29,18 +29,32 @@ export default function CharmsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Load static data
+  // Load data from database
   useEffect(() => {
-    console.log('📦 Charms page: Loading static data...');
-    console.log('📦 Charms page: Data loaded -', {
-      bracelets: bracelets.length,
-      charms: charms.length,
-      categories: charmCategories.length
-    });
-    setBracelets(bracelets);
-    setAllCharms(charms);
-    setCharmCategories(charmCategories);
-    setLoading(false);
+    async function loadData() {
+      try {
+        console.log('📦 Charms page: Loading data from database...');
+
+        const [braceletsData, charmsData, categoriesData] = await Promise.all([
+          getBracelets(),
+          getCharms(),
+          getCharmCategories()
+        ]);
+        console.log('📦 Charms page: Data loaded -', {
+          bracelets: braceletsData.length,
+          charms: charmsData.length,
+          categories: categoriesData
+        });
+        setBracelets(braceletsData);
+        setAllCharms(charmsData);
+        setCharmCategories(categoriesData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setLoading(false);
+      }
+    }
+    loadData();
   }, []);
 
   // Ensure a bracelet is always selected (defensive; store defaults to gold)

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { charms, type Charm } from '@/data/products';
+import { getCharmsWithBackgrounds, getCharmImageUrl, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
@@ -48,7 +48,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
         ) : (
           <div className="relative w-full h-full">
             <Image
-                src={charm.image}
+                src={getCharmImageUrl(charm)}
               alt={charm.name}
               fill
               className="object-contain"
@@ -98,13 +98,20 @@ export default function Home() {
   const { t } = useLanguage();
   const { showToast } = useToast();
 
-  // Filter charms with backgrounds from static data
   useEffect(() => {
-    console.log('🏠 Home page: Loading featured charms from static data...');
-    const charmsWithBackgrounds = charms.filter(charm => charm.background);
-    console.log('🏠 Home page: Found', charmsWithBackgrounds.length, 'charms with backgrounds');
-    console.log('🏠 Home page: Setting first 3:', charmsWithBackgrounds.slice(0, 3));
-    setFeaturedCharms(charmsWithBackgrounds.slice(0, 3));
+    async function loadFeaturedCharms() {
+      try {
+        console.log('🏠 Home page: Loading featured charms...');
+        const charms = await getCharmsWithBackgrounds();
+        console.log('🏠 Home page: Featured charms loaded:', charms.length, 'charms');
+        console.log('🏠 Home page: Setting first 3:', charms.slice(0, 3));
+        setFeaturedCharms(charms.slice(0, 3));
+      } catch (error) {
+        console.error('🏠 Home page: Error loading featured charms:', error);
+        setFeaturedCharms([]);
+      }
+    }
+    loadFeaturedCharms();
   }, []);
 
   return (
