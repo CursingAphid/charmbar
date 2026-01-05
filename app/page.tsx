@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { charms, type Charm } from '@/data/products';
-import { getCharmImageUrl } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';

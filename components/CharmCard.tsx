@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Charm } from '@/data/products';
-import { getCharmImageUrl, getCharmBackgroundUrl } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,8 +11,6 @@ import { X, Maximize2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
-import Charm3DIcon from './Charm3DIcon';
-import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, downloadCharmGlb } from '@/lib/db';
 
 interface CharmCardProps {
   charm: Charm;
