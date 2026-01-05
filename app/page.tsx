@@ -101,8 +101,13 @@ export default function Home() {
 
   useEffect(() => {
     async function loadFeaturedCharms() {
-      const charms = await getCharmsWithBackgrounds();
-      setFeaturedCharms(charms.slice(0, 3));
+      try {
+        const charms = await getCharmsWithBackgrounds();
+        setFeaturedCharms(charms.slice(0, 3));
+      } catch (error) {
+        console.error('Error loading featured charms:', error);
+        setFeaturedCharms([]);
+      }
     }
     loadFeaturedCharms();
   }, []);
