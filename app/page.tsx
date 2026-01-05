@@ -97,7 +97,7 @@ export default function Home() {
   const { t } = useLanguage();
   const { showToast } = useToast();
 
-  const featuredCharms = charms.slice(0, 3);
+  const featuredCharms = charms.filter(charm => charm.background).slice(0, 3);
 
   return (
     <div className="min-h-screen">

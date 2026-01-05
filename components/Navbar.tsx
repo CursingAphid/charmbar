@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Home, Languages } from 'lucide-react';
+import { ShoppingCart, Languages } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
@@ -31,14 +31,6 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <Link
-              href="/"
-              className="h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-gray-600 hover:text-pink-600 hover:bg-pink-50/50 transition-colors"
-              title={t('nav.home')}
-            >
-              <Home className="w-5 h-5" />
-            </Link>
-            
             {/* Language Toggle */}
             <div className="relative">
               <button
