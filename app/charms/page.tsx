@@ -87,6 +87,9 @@ export default function CharmsPage() {
     });
   }, [allCharms, selectedCategory, searchQuery, selectedCharms]);
 
+  // All hooks must come before conditional returns
+  const { showToast } = useToast();
+
   // Show loading state
   if (loading || !selectedBracelet) {
     return (
@@ -98,8 +101,6 @@ export default function CharmsPage() {
       </div>
     );
   }
-
-  const { showToast } = useToast();
 
   const handleAddToCart = () => {
     addToCart();
