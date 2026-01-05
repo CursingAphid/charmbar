@@ -123,6 +123,80 @@ export function downloadCharmGlb(charm: Charm): void {
 }
 
 // Database functions
+
+// Debug function to check database connectivity and table existence
+export async function debugDatabaseConnection() {
+  try {
+    console.log('🔧 Debug: Checking database connection...');
+
+    // Check if we can connect at all - try a simple query
+    const { data: connectionTest, error: connectionError } = await supabase
+      .from('charms')
+      .select('id', { count: 'exact', head: true });
+
+    console.log('🔧 Debug: Connection test:', { count: connectionTest, error: connectionError });
+
+    // Try to get table info by selecting just id
+    console.log('🔧 Debug: Checking if table exists and has data...');
+    const { data: idCheck, error: idError } = await supabase
+      .from('charms')
+      .select('id')
+      .limit(1);
+
+    console.log('🔧 Debug: ID check result:', { data: idCheck, error: idError });
+
+    // Try different table names in case of naming issues
+    const tableNames = ['charms', 'Charm', 'Charms', 'charm'];
+
+    for (const tableName of tableNames) {
+      console.log(`🔧 Debug: Trying table name "${tableName}"...`);
+      try {
+        const { data: tableData, error: tableError } = await supabase
+          .from(tableName)
+          .select('*')
+          .limit(5);
+
+        if (!tableError && tableData) {
+          console.log(`✅ Found table "${tableName}" with ${tableData.length} records!`);
+          if (tableData.length > 0) {
+            console.log(`🔧 Debug: Sample record from "${tableName}":`, tableData[0]);
+            console.log(`🔧 Debug: Columns:`, Object.keys(tableData[0]));
+          }
+          break;
+        } else {
+          console.log(`❌ Table "${tableName}" not found or empty:`, tableError?.message);
+        }
+      } catch (err) {
+        console.log(`❌ Error checking table "${tableName}":`, err.message);
+      }
+    }
+
+    // Try full select on the expected table
+    const { data, error } = await supabase
+      .from('charms')
+      .select('*')
+      .limit(10);
+
+    console.log('🔧 Debug: Full select result on "charms" table:', { data, error });
+
+    if (error) {
+      console.error('🔧 Debug: Query failed with error:', error);
+      console.error('🔧 Debug: Error code:', error.code);
+      console.error('🔧 Debug: Error message:', error.message);
+    } else {
+      console.log('🔧 Debug: Query succeeded, found', data?.length || 0, 'records');
+      if (data && data.length > 0) {
+        console.log('🔧 Debug: Sample record keys:', Object.keys(data[0]));
+        console.log('🔧 Debug: Sample record:', data[0]);
+      }
+    }
+
+    return { data, error };
+  } catch (error) {
+    console.error('🔧 Debug: Debug function failed:', error);
+    return { data: null, error };
+  }
+}
 export async function getBracelets(): Promise<Bracelet[]> {
   try {
     // For now, return empty array since we're focusing on charms
@@ -137,6 +211,24 @@ export async function getBracelets(): Promise<Bracelet[]> {
 export async function getCharms(): Promise<Charm[]> {
   try {
     console.log('🔍 getCharms: Fetching charms from database...');
+    console.log('🔍 getCharms: Supabase client available:', !!supabase);
+
+    // First, let's try a simple count query
+    const { count, error: countError } = await supabase
+      .from('charms')
+      .select('*', { count: 'exact', head: true });
+
+    console.log('🔍 getCharms: Count query result:', { count, error: countError });
+
+    // Try a different approach - select without ordering first
+    console.log('🔍 getCharms: Trying simple select...');
+    const { data: simpleData, error: simpleError } = await supabase
+      .from('charms')
+      .select('*');
+
+    console.log('🔍 getCharms: Simple query result:', { data: simpleData, error: simpleError });
+
+    // Now try the full query
     const { data, error } = await supabase
       .from('charms')
       .select('*')
@@ -144,13 +236,31 @@ export async function getCharms(): Promise<Charm[]> {
 
     if (error) {
       console.error('❌ getCharms: Database error:', error);
+      console.error('❌ getCharms: Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+
+      // Try without ordering if that might be the issue
+      console.log('🔍 getCharms: Trying without ordering...');
+      const { data: unorderedData, error: unorderedError } = await supabase
+        .from('charms')
+        .select('*');
+
+      console.log('🔍 getCharms: Unordered query:', { data: unorderedData, error: unorderedError });
       throw error;
     }
 
-    console.log('✅ getCharms: Retrieved', data?.length || 0, 'charms:', data);
+    console.log('✅ getCharms: Retrieved', data?.length || 0, 'charms');
+    console.log('✅ getCharms: Raw data:', data);
+    console.log('✅ getCharms: First charm (if any):', data?.[0]);
+
     return data || [];
   } catch (error) {
     console.error('❌ getCharms: Error fetching charms:', error);
+    console.error('❌ getCharms: Full error object:', error);
     return [];
   }
 }
