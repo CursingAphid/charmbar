@@ -12,7 +12,7 @@ import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
 import Charm3DIcon from './Charm3DIcon';
-import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, downloadCharmGlb } from '@/lib/db';
+import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, downloadCharmGlb, cleanupCharmGlbUrl } from '@/lib/db';
 
 interface CharmCardProps {
   charm: Charm;
@@ -31,7 +31,12 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+
+    // Cleanup blob URLs on unmount to prevent memory leaks
+    return () => {
+      cleanupCharmGlbUrl(charm.id);
+    };
+  }, [charm.id]);
 
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;

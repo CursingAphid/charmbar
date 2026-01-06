@@ -109,13 +109,31 @@ const getLocalGlbPath = (charmId: string): string | undefined => {
   return glbMappings[charmId];
 };
 
+// Cache for GLB blob URLs to avoid repeated conversions
+const glbCache = new Map<string, string>();
+
 export function getCharmGlbUrl(charm: Charm): string | undefined {
   if (charm.glb_data) {
+    // Use cached blob URL if available
+    if (glbCache.has(charm.id)) {
+      return glbCache.get(charm.id);
+    }
+
     try {
-      // Convert bytea hex data to Buffer, then to base64 data URL
+      // Convert bytea hex data to Buffer, then create blob URL (much more efficient than data URLs)
       const buffer = bufferFromByteaField(charm.glb_data);
-      const base64 = buffer.toString('base64');
       const mimeType = charm.glb_mimetype || 'model/gltf-binary';
+
+      // Create blob and blob URL for better performance
+      if (typeof window !== 'undefined') {
+        const blob = new Blob([buffer], { type: mimeType });
+        const blobUrl = URL.createObjectURL(blob);
+        glbCache.set(charm.id, blobUrl);
+        return blobUrl;
+      }
+
+      // Fallback to data URL for server-side rendering
+      const base64 = buffer.toString('base64');
       return `data:${mimeType};base64,${base64}`;
     } catch (error) {
       console.error('Error converting GLB data for charm:', charm.id, error);
@@ -126,9 +144,17 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
 
   // Fallback to local GLB files if no database data
   return getLocalGlbPath(charm.id);
+}
 
-  // Final fallback to legacy GLB path
-  // return charm.glbPath;
+// Function to clean up blob URLs when component unmounts
+export function cleanupCharmGlbUrl(charmId: string): void {
+  if (glbCache.has(charmId)) {
+    const blobUrl = glbCache.get(charmId);
+    if (blobUrl && blobUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(blobUrl);
+    }
+    glbCache.delete(charmId);
+  }
 }
 
 // Function to download GLB file from binary data
