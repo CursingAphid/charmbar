@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import LoadingSpinner from './LoadingSpinner';
 
 interface Charm3DIconProps {
   iconName?: string;
@@ -192,7 +193,7 @@ export default function Charm3DIcon({
         }}
       >
         <SceneCleanup />
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingSpinner size="md" color="#ec4899" />}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 5]} intensity={1} />
           <pointLight position={[-10, -10, -5]} intensity={0.5} />
