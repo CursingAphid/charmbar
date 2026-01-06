@@ -64,8 +64,11 @@ export function getCharmImageUrl(charm: Charm): string {
     const base64 = buffer.toString('base64');
     return `data:${charm.image_mimetype};base64,${base64}`;
   }
-  // Fallback to legacy image path
-  return charm.image || '/images/placeholder.png';
+  // Prefer on-demand API fetch to avoid loading BYTEA blobs in list queries
+  if (typeof window !== 'undefined') {
+    return `/api/charm-image/${charm.id}`;
+  }
+  return '/images/placeholder.png';
 }
 
 export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
@@ -136,7 +139,10 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
     }
   }
 
-  // Fallback to local GLB files if no database data
+  // Prefer on-demand API fetch (keeps list queries small)
+  if (typeof window !== 'undefined') {
+    return `/api/charm-glb/${charm.id}`;
+  }
   return getLocalGlbPath(charm.id);
 }
 
@@ -232,17 +238,29 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    // Include image and GLB fields for proper rendering (removed non-existent 'image' column)
+    const t0 = Date.now();
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:start',message:'getCharms start',data:{select:'id,name,description,price,category,background_id',limit:10},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    // IMPORTANT: Do NOT select BYTEA blobs (image_data/glb_data) here.
+    // They can be huge and cause PostgREST statement timeouts.
+    // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
+      .select('id, name, description, price, category, background_id')
       .order('created_at', { ascending: false })
       .limit(10); // Add limit to prevent large result sets
 
     if (error) throw error;
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:ok',message:'getCharms ok',data:{ms:Date.now()-t0,count:(data||[]).length},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return data || [];
   } catch (error) {
     console.error('Error fetching charms:', error);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:err',message:'getCharms error',data:{name:(error as any)?.name??null,code:(error as any)?.code??null,message:(error as any)?.message??null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return [];
   }
 }
@@ -255,7 +273,7 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
 
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
+      .select('id, name, description, price, category, background_id')
       .eq('category', category)
       .order('created_at', { ascending: false });
 
@@ -299,7 +317,7 @@ export async function getCharmById(id: string): Promise<Charm | null> {
   try {
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
+      .select('id, name, description, price, category, background_id')
       .eq('id', id)
       .single();
 
@@ -316,7 +334,7 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
     // Simplify query - just get charms that have background_id for now
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
+      .select('id, name, description, price, category, background_id')
       .not('background_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(3);

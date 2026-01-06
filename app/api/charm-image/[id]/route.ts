@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { bufferFromByteaField } from '@/lib/utils';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } | Promise<{ id: string }> }
+) {
+  const resolvedParams = await Promise.resolve(params as any);
+  const charmId = resolvedParams?.id as string | undefined;
+
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'A',location:'app/api/charm-image/[id]/route.ts:GET',message:'charm-image requested',data:{charmId:charmId??null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json({ error: 'Supabase env not configured' }, { status: 500 });
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+      .from('charms')
+      .select('image_data, image_mimetype')
+      .eq('id', charmId)
+      .single();
+
+    if (error || !data?.image_data) {
+      return NextResponse.json({ error: 'Charm image not found' }, { status: 404 });
+    }
+
+    const buffer = bufferFromByteaField(data.image_data);
+    const uint8Array = new Uint8Array(buffer);
+
+    const headers = new Headers();
+    headers.set('Content-Type', data.image_mimetype || 'image/png');
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+
+    return new NextResponse(uint8Array, { status: 200, headers });
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to fetch charm image' }, { status: 500 });
+  }
+}
+
+
