@@ -18,6 +18,8 @@ const translations = {
     'nav.home': 'Home',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
+    'nav.backgroundsOn': 'Charm backgrounds: On',
+    'nav.backgroundsOff': 'Charm backgrounds: Off',
     
     // Home page
     'home.hero.title': 'Create Your Perfect',
@@ -81,6 +83,8 @@ const translations = {
     'nav.home': 'Home',
     'nav.cart': 'Winkelwagen',
     'nav.language': 'Taal',
+    'nav.backgroundsOn': 'Charm achtergronden: Aan',
+    'nav.backgroundsOff': 'Charm achtergronden: Uit',
     
     // Home page
     'home.hero.title': 'Creëer Je Perfecte',

@@ -22,6 +22,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const selectedCharms = useStore((state) => state.selectedCharms);
   const addCharm = useStore((state) => state.addCharm);
   const reorderCharms = useStore((state) => state.reorderCharms);
+  const showCharmBackgrounds = useStore((state) => state.showCharmBackgrounds);
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -159,7 +160,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-          style={backgroundUrl ? {
+          style={backgroundUrl && showCharmBackgrounds ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -260,7 +261,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                   {/* Charm display */}
                   <div
                     className="relative h-[60vh] flex items-center justify-center p-8"
-                    style={backgroundUrl ? {
+                    style={backgroundUrl && showCharmBackgrounds ? {
                       backgroundImage: `url(${backgroundUrl})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
