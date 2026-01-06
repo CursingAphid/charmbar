@@ -224,9 +224,14 @@ export default function CharmsPage() {
               </div>
 
               {/* Filter Dropdown */}
-              <div className="relative" ref={filterDropdownRef}>
+              <div className="relative z-40" ref={filterDropdownRef}>
                 <button
-                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  onClick={() => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'dropdown-zindex-fix',hypothesisId:'dropdown-toggle',location:'app/charms/page.tsx:toggle-click',message:'Dropdown button clicked',data:{currentState:showFilterDropdown},timestamp:Date.now()})}).catch(()=>{});
+                    // #endregion
+                    setShowFilterDropdown(!showFilterDropdown);
+                  }}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
                     showFilterDropdown || selectedCategory !== 'All'
                       ? 'bg-pink-50 border-pink-300 text-pink-700'
@@ -243,7 +248,7 @@ export default function CharmsPage() {
 
                 {/* Dropdown Menu */}
                 {showFilterDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
                       <div className="py-2">
                         <button
                           onClick={() => {
