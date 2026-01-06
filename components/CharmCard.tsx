@@ -24,20 +24,22 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const reorderCharms = useStore((state) => state.reorderCharms);
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [interactionTimeout, setInteractionTimeout] = useState<NodeJS.Timeout | null>(null);
+  const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
 
-    // Cleanup timeout on unmount
+  // Cleanup timeout on unmount
+  useEffect(() => {
     return () => {
-      if (interactionTimeout) {
-        clearTimeout(interactionTimeout);
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
       }
     };
-  }, [interactionTimeout]);
+  }, []);
 
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;
@@ -64,9 +66,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   const handleMouseLeave = () => {
     // Clear any existing timeout
-    if (interactionTimeout) {
-      clearTimeout(interactionTimeout);
-      setInteractionTimeout(null);
+    if (interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
+      interactionTimeoutRef.current = null;
     }
 
     // If not interacting, hide immediately
@@ -78,28 +80,28 @@ export default function CharmCard({ charm }: CharmCardProps) {
     // If interacting, delay hiding to prevent flickering when dragging outside
     const timeout = setTimeout(() => {
       setIsHovered(false);
-      setInteractionTimeout(null);
+      interactionTimeoutRef.current = null;
     }, 150); // Small delay to prevent flickering
 
-    setInteractionTimeout(timeout);
+    interactionTimeoutRef.current = timeout;
   };
 
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
 
     // If interaction starts, clear any pending timeout
-    if (interacting && interactionTimeout) {
-      clearTimeout(interactionTimeout);
-      setInteractionTimeout(null);
+    if (interacting && interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
+      interactionTimeoutRef.current = null;
     }
 
     // If interaction ends, hide after a delay to prevent flickering
     if (!interacting) {
       const timeout = setTimeout(() => {
         setIsHovered(false);
-        setInteractionTimeout(null);
+        interactionTimeoutRef.current = null;
       }, 100);
-      setInteractionTimeout(timeout);
+      interactionTimeoutRef.current = timeout;
     }
   };
 
@@ -109,9 +111,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
         onMouseEnter={() => {
           if (!isFullscreen) {
             // Clear any pending timeout
-            if (interactionTimeout) {
-              clearTimeout(interactionTimeout);
-              setInteractionTimeout(null);
+            if (interactionTimeoutRef.current) {
+              clearTimeout(interactionTimeoutRef.current);
+              interactionTimeoutRef.current = null;
             }
             setIsHovered(true);
           }
@@ -183,7 +185,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
             backgroundRepeat: 'no-repeat'
           } : undefined}
         >
-          {getCharmGlbUrl(charm) && (isHovered || isInteracting) ? (
+          {getCharmGlbUrl(charm) && (isHovered || isInteracting || isFullscreen) ? (
             <div className="w-full h-full">
               <Charm3DIcon
                 iconName={charm.icon3d}
