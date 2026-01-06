@@ -71,16 +71,10 @@ export function getCharmImageUrl(charm: Charm): string {
 export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
   // Check if charm has a background_id (new API system)
   if (charm.background_id) {
-    try {
-      // Use the flatter API endpoint for background images
-      const response = await fetch(`/api/charm-background/${charm.id}`);
-      if (response.ok) {
-        // Return the API endpoint URL for the image
-        return `/api/charm-background/${charm.id}`;
-      }
-    } catch (error) {
-      console.error('Error fetching background image:', error);
-    }
+    // IMPORTANT: Don't pre-fetch here.
+    // The returned URL will be requested by the browser when used as a CSS background,
+    // so pre-fetching would cause a double request and make the UI feel laggy.
+    return `/api/charm-background/${charm.id}`;
   }
 
   // Fallback to legacy background data (for backward compatibility)
