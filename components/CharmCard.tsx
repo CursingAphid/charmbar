@@ -109,7 +109,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
         }`}
       >
         {/* Action buttons */}
-        <div className="absolute top-2 right-2 z-20 flex gap-1">
+        <div className="absolute top-2 right-2 z-30 flex gap-1">
           {/* Background toggle */}
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
