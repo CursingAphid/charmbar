@@ -263,6 +263,14 @@ export async function getCharms(): Promise<Charm[]> {
       tags: charm.charm_tags?.map((ct: any) => ct.tags?.name).filter(Boolean) || []
     }));
 
+    console.log('📦 getCharms result:', charms.map(c => ({
+      id: c.id,
+      name: c.name,
+      tags: c.tags,
+      category: c.category,
+      charm_tags: c.charm_tags // raw data for debugging
+    })));
+
     return charms;
   } catch (error) {
     console.error('Error fetching charms:', error);
@@ -308,6 +316,7 @@ export async function getCharmCategories(): Promise<string[]> {
 
     // Get unique tag names
     const tags: string[] = data?.map((item: any) => item.name as string).filter(Boolean) || [];
+    console.log('🏷️ getCharmCategories result:', ['All', ...tags]);
     return ['All', ...tags];
   } catch (error) {
     console.error('Error fetching charm tags:', error);
@@ -415,18 +424,7 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
       .limit(3);
 
     if (error) throw error;
-
-    console.log('🔍 getCharmsWithBackgrounds raw data:', data);
-
-    // Transform data to include tags array
-    const charms: Charm[] = (data || []).map((charm: any) => ({
-      ...charm,
-      tags: charm.charm_tags?.map((ct: any) => ct.tags?.name).filter(Boolean) || []
-    }));
-
-    console.log('🔍 getCharmsWithBackgrounds transformed:', charms.map(c => ({ id: c.id, name: c.name, background_id: c.background_id })));
-
-    return charms;
+    return data || [];
   } catch (error) {
     console.error('Error fetching charms with backgrounds:', error);
     return [];
