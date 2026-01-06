@@ -44,12 +44,15 @@ export async function GET(
     // Convert bytea data to buffer
     const buffer = bufferFromByteaField(background.image_data);
 
+    // Convert to Uint8Array for web compatibility
+    const uint8Array = new Uint8Array(buffer);
+
     // Return the image with proper headers
     const headers = new Headers();
     headers.set('Content-Type', background.image_mimetype || 'image/png');
     headers.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
 
-    return new NextResponse(buffer, {
+    return new NextResponse(uint8Array, {
       status: 200,
       headers,
     });
