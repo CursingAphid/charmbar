@@ -29,7 +29,6 @@ interface StoreState {
   selectedBracelet: Bracelet | null;
   selectedCharms: SelectedCharm[];
   cart: CartItem[];
-  showCharmBackgrounds: boolean;
 
   // Actions
   setBracelet: (bracelet: Bracelet) => void;
@@ -39,7 +38,6 @@ interface StoreState {
   addToCart: () => void;
   removeFromCart: (cartItemId: string) => void;
   clearSelection: () => void;
-  toggleCharmBackgrounds: () => void;
   getTotalPrice: () => number;
   getCartTotal: () => number;
 }
@@ -48,7 +46,6 @@ export const useStore = create<StoreState>((set, get) => ({
   selectedBracelet: defaultBracelet,
   selectedCharms: [],
   cart: [],
-  showCharmBackgrounds: true,
 
   setBracelet: (bracelet) => {
     set({ selectedBracelet: bracelet });
@@ -99,11 +96,6 @@ export const useStore = create<StoreState>((set, get) => ({
 
   clearSelection: () => {
     set({ selectedBracelet: defaultBracelet, selectedCharms: [] });
-  },
-
-  toggleCharmBackgrounds: () => {
-    const { showCharmBackgrounds } = get();
-    set({ showCharmBackgrounds: !showCharmBackgrounds });
   },
 
   getTotalPrice: () => {

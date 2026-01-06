@@ -7,7 +7,7 @@ import { Charm } from '@/data/products';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2 } from 'lucide-react';
+import { X, Maximize2, Image as ImageIcon } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
@@ -22,12 +22,12 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const selectedCharms = useStore((state) => state.selectedCharms);
   const addCharm = useStore((state) => state.addCharm);
   const reorderCharms = useStore((state) => state.reorderCharms);
-  const showCharmBackgrounds = useStore((state) => state.showCharmBackgrounds);
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted] = useState(true); // Components are mounted when they render
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
+  const [showBackground, setShowBackground] = useState(true); // Per-card background toggle
   const isPointerInsideRef = useRef(false);
   const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen);
 
@@ -78,17 +78,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
-    console.log('CharmCard (card view): isInteracting', interacting);
     // IMPORTANT: avoid state churn while dragging. When drag ends, sync hover once based on pointer location.
     if (!interacting && !isFullscreen) {
       setIsHovered(isPointerInsideRef.current);
     }
-  };
-
-  const handleFullscreenInteractionChange = (interacting: boolean) => {
-    // In fullscreen mode, we only care about the interaction state for 3D controls
-    setIsInteracting(interacting);
-    console.log('CharmCard (fullscreen): isInteracting', interacting);
   };
 
   return (
@@ -117,6 +110,27 @@ export default function CharmCard({ charm }: CharmCardProps) {
       >
         {/* Action buttons */}
         <div className="absolute top-2 right-2 z-20 flex gap-1">
+          {/* Background toggle */}
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowBackground(!showBackground);
+            }}
+            className={`rounded-full p-1.5 shadow-lg transition-colors ${
+              showBackground
+                ? 'bg-pink-500 text-white'
+                : 'bg-white/90 hover:bg-white text-gray-600'
+            }`}
+            aria-label={showBackground ? 'Hide background' : 'Show background'}
+            title={showBackground ? 'Hide background' : 'Show background'}
+          >
+            <ImageIcon className="w-4 h-4" />
+          </motion.button>
+
           {/* Fullscreen button */}
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
@@ -165,7 +179,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-          style={backgroundUrl && showCharmBackgrounds ? {
+          style={backgroundUrl && showBackground ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -266,7 +280,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                   {/* Charm display */}
                   <div
                     className="relative h-[60vh] flex items-center justify-center p-8"
-                    style={backgroundUrl && showCharmBackgrounds ? {
+                    style={backgroundUrl && showBackground ? {
                       backgroundImage: `url(${backgroundUrl})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
@@ -281,7 +295,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                           size={1.5}
                           color="#ec4899"
                           spin={true}
-                          onInteractionChange={handleFullscreenInteractionChange}
+                          onInteractionChange={() => {}}
                           cameraZ={4}
                         />
                       </div>

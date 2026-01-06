@@ -10,7 +10,7 @@ import PreviewCanvas from '@/components/PreviewCanvas';
 import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronDown, Info, Image, Eye } from 'lucide-react';
+import { Search, ShoppingBag, X, ChevronDown, Info, Image, Eye, Filter, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function CharmsPage() {
@@ -20,8 +20,6 @@ export default function CharmsPage() {
   const selectedCharms = useStore((state) => state.selectedCharms);
   const addToCart = useStore((state) => state.addToCart);
   const getTotalPrice = useStore((state) => state.getTotalPrice);
-  const showCharmBackgrounds = useStore((state) => state.showCharmBackgrounds);
-  const toggleCharmBackgrounds = useStore((state) => state.toggleCharmBackgrounds);
   const { t } = useLanguage();
 
   const [bracelets, setBracelets] = useState<Bracelet[]>([]);
@@ -30,6 +28,7 @@ export default function CharmsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
 
   // Load data from database
@@ -207,44 +206,64 @@ export default function CharmsPage() {
                 )}
               </div>
 
-              {/* Filters Row (mobile-first) */}
-              <div className="flex items-center gap-2">
-                {/* Background Toggle */}
+              {/* Filter Dropdown */}
+              <div className="relative">
                 <button
-                  onClick={toggleCharmBackgrounds}
-                  className={[
-                    'shrink-0 p-2.5 rounded-xl border transition-all duration-200',
-                    showCharmBackgrounds
-                      ? 'bg-pink-500 border-pink-500 text-white shadow-sm'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400',
-                  ].join(' ')}
-                  title={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
-                  aria-label={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
+                    showFilterDropdown || selectedCategory !== 'All'
+                      ? 'bg-pink-50 border-pink-300 text-pink-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
+                  }`}
                   type="button"
                 >
-                  <Image className="w-4 h-4" />
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {selectedCategory === 'All' ? 'All Tags' : selectedCategory}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Category Filters (scroll on mobile) */}
-                <div className="flex-1 -mx-4 px-4 overflow-x-auto scrollbar-hide">
-                  <div className="flex gap-2 whitespace-nowrap">
-                    {charmCategories.map((category) => (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={[
-                          'px-4 py-2 rounded-full text-sm font-medium transition-all',
-                          selectedCategory === category
-                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
-                            : 'bg-white text-gray-700 border border-gray-300 hover:border-pink-300 hover:text-pink-600',
-                        ].join(' ')}
-                        type="button"
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {/* Dropdown Menu */}
+                {showFilterDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowFilterDropdown(false)}
+                    />
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-y-auto">
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            setSelectedCategory('All');
+                            setShowFilterDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm hover:bg-pink-50 transition-colors ${
+                            selectedCategory === 'All' ? 'bg-pink-50 text-pink-700 font-medium' : 'text-gray-700'
+                          }`}
+                          type="button"
+                        >
+                          All Tags
+                        </button>
+                        {charmCategories.filter(cat => cat !== 'All').map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => {
+                              setSelectedCategory(category);
+                              setShowFilterDropdown(false);
+                            }}
+                            className={`w-full text-left px-4 py-3 text-sm hover:bg-pink-50 transition-colors ${
+                              selectedCategory === category ? 'bg-pink-50 text-pink-700 font-medium' : 'text-gray-700'
+                            }`}
+                            type="button"
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -394,22 +413,32 @@ export default function CharmsPage() {
               <Eye className="w-5 h-5" />
             </button>
 
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                ${getTotalPrice().toFixed(2)}
-              </p>
-              <p className="text-xs text-gray-600 truncate">
-                {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')} {t('charms.selected')}
-              </p>
-            </div>
+            {selectedCharms.length === 0 ? (
+              <div className="flex-1 text-center">
+                <p className="text-sm text-gray-600">
+                  Select charms to continue
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Tap charms above to add them
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    ${getTotalPrice().toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-600 truncate">
+                    {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')} {t('charms.selected')}
+                  </p>
+                </div>
 
-            <Button
-              onClick={handleAddToCart}
-              className="flex-1"
-              disabled={selectedCharms.length === 0}
-            >
-              {t('charms.button.cart')}
-            </Button>
+                <Button onClick={handleAddToCart} className="flex-1">
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  {t('charms.button.cart')}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
