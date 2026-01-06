@@ -174,6 +174,56 @@ export function cleanupCharmGlbUrl(charmId: string): void {
   }
 }
 
+// Background functions
+export interface Background {
+  id: string;
+  name: string;
+  image_data?: string;
+  image_filename?: string;
+  image_mimetype?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getBackgrounds(): Promise<Background[]> {
+  try {
+    const { data, error } = await supabase
+      .from('backgrounds')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching backgrounds:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getBackgrounds:', error);
+    return [];
+  }
+}
+
+export async function getBackgroundById(id: string): Promise<Background | null> {
+  try {
+    const { data, error } = await supabase
+      .from('backgrounds')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching background:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getBackgroundById:', error);
+    return null;
+  }
+}
+
 // Function to download GLB file from binary data
 export function downloadCharmGlb(charm: Charm): void {
   if (charm.glb_data && typeof window !== 'undefined') {
