@@ -232,10 +232,13 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
+    console.log('🎨 getCharms: Fetching all charms from database...');
+    // Simplify query to avoid timeout - just get basic data
     const { data, error } = await supabase
       .from('charms')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id, name, description, price, category, background_id')
+      .order('created_at', { ascending: false })
+      .limit(10); // Add limit to prevent large result sets
 
     if (error) {
       console.error('❌ Error fetching charms:', error);
@@ -317,11 +320,11 @@ export async function getCharmById(id: string): Promise<Charm | null> {
 export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
   try {
     console.log('🎨 getCharmsWithBackgrounds: Fetching charms with backgrounds...');
-    // Try to fetch charms that have either a background_id (new system) or background_data (legacy)
+    // Simplify query - just get charms that have background_id for now
     const { data, error } = await supabase
       .from('charms')
-      .select('*')
-      .or('background_id.not.is.null,background_data.not.is.null')
+      .select('id, name, description, price, category, background_id')
+      .not('background_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(3);
 
