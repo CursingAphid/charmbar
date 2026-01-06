@@ -21,9 +21,8 @@ export default function Card({
   const baseStyles = 'bg-white rounded-xl shadow-md overflow-hidden';
   const interactiveStyles = onClick || hover ? 'cursor-pointer transition-all duration-300 hover:shadow-xl' : '';
   
-  const Component = onClick || hover ? motion.div : 'div';
-  const motionProps = onClick || hover ? {
-    whileHover: { y: -4, scale: 1.02 },
+  const Component = onClick ? motion.div : 'div';
+  const motionProps = onClick ? {
     whileTap: { scale: 0.98 },
     transition: { duration: 0.2 },
   } : {};
