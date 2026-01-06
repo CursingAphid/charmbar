@@ -323,10 +323,11 @@ export async function getCharmById(id: string): Promise<Charm | null> {
 export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
   try {
     console.log('🎨 getCharmsWithBackgrounds: Fetching charms with backgrounds...');
+    // Try to fetch charms that have either a background_id (new system) or background_data (legacy)
     const { data, error } = await supabase
       .from('charms')
       .select('*')
-      .not('background_data', 'is', null)
+      .or('background_id.not.is.null,background_data.not.is.null')
       .order('created_at', { ascending: false })
       .limit(3);
 
