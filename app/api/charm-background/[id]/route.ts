@@ -4,9 +4,10 @@ import { bufferFromByteaField } from '@/lib/utils';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
-  const charmId = params.id;
+  const resolvedParams = await Promise.resolve(params as any);
+  const charmId = resolvedParams?.id;
   console.log(`[API] Fetching background for charm ID: ${charmId}`);
 
   try {

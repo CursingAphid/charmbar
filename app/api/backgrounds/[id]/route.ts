@@ -3,10 +3,12 @@ import { getBackgroundById } from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    const background = await getBackgroundById(params.id);
+    const resolvedParams = await Promise.resolve(params as any);
+    const id = resolvedParams?.id;
+    const background = await getBackgroundById(id);
 
     if (!background) {
       return NextResponse.json({ error: 'Background not found' }, { status: 404 });
