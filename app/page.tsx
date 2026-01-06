@@ -82,7 +82,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
             showToast(`${charm.name} added!`, 'success');
             router.push('/charms');
           }}
-          className="text-xs sm:text-sm font-bold py-1.5 sm:py-2"
+          className="text-[10px] sm:text-xs lg:text-sm font-bold py-1.5 sm:py-2"
         >
           {isAdded ? t('home.featured.added') : t('home.featured.add')}
         </Button>
@@ -368,7 +368,7 @@ export default function Home() {
               <Sparkles className="w-6 h-6 text-pink-500" />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-8">
               {featuredCharms.map((charm) => (
                 <FeaturedCharmCard
                   key={charm.id}

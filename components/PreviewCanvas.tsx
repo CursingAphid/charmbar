@@ -639,7 +639,7 @@ export default function PreviewCanvas() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-pink-600">
-                        ${selectedBracelet.price.toFixed(2)}
+                        €{selectedBracelet.price.toFixed(2)}
                       </p>
                       {selectedCharms.length > 0 && (
                         <p className="text-xs text-gray-500">

@@ -76,7 +76,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                   {cartItem.bracelet.name}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  ${cartItem.bracelet.price.toFixed(2)}
+                  €{cartItem.bracelet.price.toFixed(2)}
                 </p>
               </div>
               <div className="text-right">

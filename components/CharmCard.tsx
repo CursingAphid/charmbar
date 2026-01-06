@@ -219,7 +219,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
             <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">{charm.description}</p>
           </div>
           <div className="flex items-center justify-between mb-2 sm:mb-4">
-            <span className="text-base sm:text-lg font-bold text-pink-600">${charm.price.toFixed(2)}</span>
+            <span className="text-base sm:text-lg font-bold text-pink-600">€{charm.price.toFixed(2)}</span>
             {isSelected && (
               <motion.span
                 initial={{ opacity: 0 }}
@@ -235,7 +235,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
             size="sm" 
             onClick={handleCardClick}
             variant={isSelected ? 'secondary' : 'primary'}
-            className="text-xs sm:text-sm py-1.5 sm:py-2"
+            className="text-[10px] sm:text-xs lg:text-sm py-1.5 sm:py-2"
           >
             {t('home.featured.add')}
           </Button>

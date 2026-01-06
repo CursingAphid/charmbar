@@ -189,7 +189,7 @@ export default function CharmsPage() {
             >
               {bracelets.map((bracelet) => (
                 <option key={bracelet.id} value={bracelet.id}>
-                  {bracelet.name} (${bracelet.price.toFixed(2)})
+                  {bracelet.name} (€{bracelet.price.toFixed(2)})
                 </option>
               ))}
             </select>
@@ -303,7 +303,7 @@ export default function CharmsPage() {
 
             {/* Charms Grid */}
             {filteredCharms.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {filteredCharms.map((charm, index) => (
                   <motion.div
                     key={charm.id}
