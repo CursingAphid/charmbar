@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getBracelets, getCharms, getCharmsByTag, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
@@ -29,6 +29,7 @@ export default function CharmsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
 
   // Load data from database
@@ -112,6 +113,22 @@ export default function CharmsPage() {
       return 0;
     });
   }, [allCharms, selectedCategory, searchQuery, selectedCharms]);
+
+  // Handle clicks outside the filter dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setShowFilterDropdown(false);
+      }
+    };
+
+    if (showFilterDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showFilterDropdown]);
 
   // All hooks must come before conditional returns
   const { showToast } = useToast();
@@ -207,7 +224,7 @@ export default function CharmsPage() {
               </div>
 
               {/* Filter Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={filterDropdownRef}>
                 <button
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
@@ -226,12 +243,7 @@ export default function CharmsPage() {
 
                 {/* Dropdown Menu */}
                 {showFilterDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowFilterDropdown(false)}
-                    />
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-y-auto">
                       <div className="py-2">
                         <button
                           onClick={() => {
@@ -261,8 +273,7 @@ export default function CharmsPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
