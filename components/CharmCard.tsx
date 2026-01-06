@@ -47,6 +47,12 @@ export default function CharmCard({ charm }: CharmCardProps) {
     // #endregion
   }, [show3d]); // only log when the branch flips
 
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:hover',message:'isHovered changed',data:{charmId:charm.id,isHovered,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [isHovered]);
+
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;
   const isSelected = quantity > 0;

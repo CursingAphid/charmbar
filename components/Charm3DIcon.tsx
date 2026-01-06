@@ -170,8 +170,18 @@ export default function Charm3DIcon({
         }
       };
 
+      const handleGlobalCancel = () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'E',location:'components/Charm3DIcon.tsx:globalCancel',message:'Global pointercancel',data:{cameraZ},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      };
+
       window.addEventListener('pointerup', handleGlobalUp);
-      return () => window.removeEventListener('pointerup', handleGlobalUp);
+      window.addEventListener('pointercancel', handleGlobalCancel);
+      return () => {
+        window.removeEventListener('pointerup', handleGlobalUp);
+        window.removeEventListener('pointercancel', handleGlobalCancel);
+      };
     }
   }, [isDragging, onInteractionChange, cameraZ]);
 
