@@ -15,13 +15,13 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Helper functions for binary data handling
-function byteaHexFromBase64(base64: string): string | null {
+export function byteaHexFromBase64(base64: string): string | null {
   if (!base64) return null;
   const buf = Buffer.from(base64, 'base64');
   return `\\x${buf.toString('hex')}`;
 }
 
-function bufferFromByteaField(value: string): Buffer {
+export function bufferFromByteaField(value: string): Buffer {
   if (value.startsWith('\\x')) {
     const raw = Buffer.from(value.slice(2), 'hex');
     const asText = raw.toString('utf8');
