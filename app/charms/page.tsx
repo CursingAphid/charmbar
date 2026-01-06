@@ -223,13 +223,13 @@ export default function CharmsPage() {
                 )}
               </div>
 
-              {/* Filter Dropdown */}
-              <div className="relative z-40" ref={filterDropdownRef}>
+              {/* Filter Dropdown (Mobile only) */}
+              <div className="relative z-40 lg:hidden" ref={filterDropdownRef}>
                 <button
                   onClick={() => {
                     setShowFilterDropdown(!showFilterDropdown);
                   }}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
+                  className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
                     showFilterDropdown || selectedCategory !== 'All'
                       ? 'bg-pink-50 border-pink-300 text-pink-700'
                       : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
@@ -240,7 +240,7 @@ export default function CharmsPage() {
                   <span className="text-sm font-medium">
                     {selectedCategory === 'All' ? 'All Tags' : selectedCategory}
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -277,6 +277,27 @@ export default function CharmsPage() {
                       </div>
                   </div>
                 )}
+              </div>
+
+              {/* Horizontal Scroll Tags (Desktop/Tablet only) */}
+              <div className="hidden lg:flex items-center gap-2 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-2 whitespace-nowrap">
+                  {charmCategories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={[
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        selectedCategory === category
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:border-pink-300 hover:text-pink-600',
+                      ].join(' ')}
+                      type="button"
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
