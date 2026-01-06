@@ -232,7 +232,6 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    console.log('🎨 getCharms: Fetching all charms from database...');
     // Simplify query to avoid timeout - just get basic data
     const { data, error } = await supabase
       .from('charms')
@@ -240,15 +239,10 @@ export async function getCharms(): Promise<Charm[]> {
       .order('created_at', { ascending: false })
       .limit(10); // Add limit to prevent large result sets
 
-    if (error) {
-      console.error('❌ Error fetching charms:', error);
-      throw error;
-    }
-
-    console.log('✅ Retrieved', data?.length || 0, 'charms from database');
+    if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('❌ Error fetching charms:', error);
+    console.error('Error fetching charms:', error);
     return [];
   }
 }
@@ -319,7 +313,6 @@ export async function getCharmById(id: string): Promise<Charm | null> {
 
 export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
   try {
-    console.log('🎨 getCharmsWithBackgrounds: Fetching charms with backgrounds...');
     // Simplify query - just get charms that have background_id for now
     const { data, error } = await supabase
       .from('charms')
@@ -328,15 +321,10 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
       .order('created_at', { ascending: false })
       .limit(3);
 
-    if (error) {
-      console.error('❌ getCharmsWithBackgrounds: Database error:', error);
-      throw error;
-    }
-
-    console.log('✅ getCharmsWithBackgrounds: Found', data?.length || 0, 'charms with backgrounds:', data);
+    if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('❌ getCharmsWithBackgrounds: Error:', error);
+    console.error('Error fetching charms with backgrounds:', error);
     return [];
   }
 }
