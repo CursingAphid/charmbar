@@ -27,9 +27,18 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen);
 
   useEffect(() => {
     setIsMounted(true);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'A',location:'components/CharmCard.tsx:mount',message:'CharmCard mounted',data:{charmId:charm.id},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    return () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'A',location:'components/CharmCard.tsx:unmount',message:'CharmCard unmounted',data:{charmId:charm.id},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    };
   }, []);
 
   // Cleanup timeout on unmount
@@ -40,6 +49,12 @@ export default function CharmCard({ charm }: CharmCardProps) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:show3d',message:'show3d changed',data:{charmId:charm.id,show3d,isHovered,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [show3d]); // only log when the branch flips
 
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;
@@ -88,6 +103,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/CharmCard.tsx:interaction',message:'Interaction change',data:{charmId:charm.id,interacting,isHovered,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     // If interaction starts, clear any pending timeout
     if (interacting && interactionTimeoutRef.current) {
@@ -116,9 +134,15 @@ export default function CharmCard({ charm }: CharmCardProps) {
               interactionTimeoutRef.current = null;
             }
             setIsHovered(true);
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseenter',message:'Mouse enter',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
           }
         }}
         onMouseLeave={() => {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseleave',message:'Mouse leave',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (!isFullscreen) handleMouseLeave();
         }}
         hover

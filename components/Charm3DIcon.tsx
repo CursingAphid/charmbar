@@ -158,6 +158,9 @@ export default function Charm3DIcon({
       const handleGlobalUp = () => {
         setIsDragging(false);
         onInteractionChange?.(false);
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/Charm3DIcon.tsx:globalUp',message:'Global pointerup (end drag)',data:{cameraZ},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         
         // Reset to initial position
         if (controlsRef.current && cameraRef.current) {
@@ -175,6 +178,9 @@ export default function Charm3DIcon({
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     onInteractionChange?.(true);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/Charm3DIcon.tsx:pointerdown',message:'Pointer down',data:{glbPath:!!glbPath,isDragging:true},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
   };
 
   return (
@@ -206,6 +212,16 @@ export default function Charm3DIcon({
             enableZoom={false}
             enablePan={false}
             autoRotate={false}
+            onStart={() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'D',location:'components/Charm3DIcon.tsx:controlsStart',message:'OrbitControls start',data:{},timestamp:Date.now()})}).catch(()=>{});
+              // #endregion
+            }}
+            onEnd={() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'D',location:'components/Charm3DIcon.tsx:controlsEnd',message:'OrbitControls end',data:{},timestamp:Date.now()})}).catch(()=>{});
+              // #endregion
+            }}
           />
           <Environment preset="sunset" />
         </Suspense>
