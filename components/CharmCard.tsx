@@ -78,6 +78,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
+    console.log('CharmCard (card view): isInteracting', interacting);
     // IMPORTANT: avoid state churn while dragging. When drag ends, sync hover once based on pointer location.
     if (!interacting && !isFullscreen) {
       setIsHovered(isPointerInsideRef.current);
@@ -87,6 +88,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const handleFullscreenInteractionChange = (interacting: boolean) => {
     // In fullscreen mode, we only care about the interaction state for 3D controls
     setIsInteracting(interacting);
+    console.log('CharmCard (fullscreen): isInteracting', interacting);
   };
 
   return (
