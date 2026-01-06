@@ -31,27 +31,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   useEffect(() => {
     setIsMounted(true);
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'A',location:'components/CharmCard.tsx:mount',message:'CharmCard mounted',data:{charmId:charm.id},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    return () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'A',location:'components/CharmCard.tsx:unmount',message:'CharmCard unmounted',data:{charmId:charm.id},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    };
   }, []);
-
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:show3d',message:'show3d changed',data:{charmId:charm.id,show3d,isHovered,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  }, [show3d]); // only log when the branch flips
-
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:hover',message:'isHovered changed',data:{charmId:charm.id,isHovered,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  }, [isHovered]);
 
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;
@@ -78,9 +58,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/CharmCard.tsx:interaction',message:'Interaction change',data:{charmId:charm.id,interacting,isHovered,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     // IMPORTANT: avoid state churn while dragging. When drag ends, sync hover once based on pointer location.
     if (!interacting && !isFullscreen) {
       setIsHovered(isPointerInsideRef.current);
@@ -95,15 +72,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
             isPointerInsideRef.current = true;
             // While dragging, don't update hover state (prevents re-renders that can stutter the canvas)
             if (!isInteracting) setIsHovered(true);
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseenter',message:'Mouse enter',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
           }
         }}
         onMouseLeave={() => {
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseleave',message:'Mouse leave',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           if (!isFullscreen) {
             isPointerInsideRef.current = false;
             // While dragging, don't update hover state (prevents re-renders that can stutter the canvas)
