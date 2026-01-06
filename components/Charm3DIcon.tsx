@@ -151,6 +151,11 @@ export default function Charm3DIcon({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const lastLocalMoveTsRef = useRef<number>(0);
+  const lastGlobalMoveTsRef = useRef<number>(0);
+  const gapLoggedRef = useRef<boolean>(false);
+  const localMoveCountRef = useRef<number>(0);
+  const globalMoveCountRef = useRef<number>(0);
 
   // Use useEffect to handle global pointer up for when dragging ends outside the element
   useEffect(() => {
@@ -160,6 +165,9 @@ export default function Charm3DIcon({
         onInteractionChange?.(false);
         // #region agent log
         fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/Charm3DIcon.tsx:globalUp',message:'Global pointerup (end drag)',data:{cameraZ},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'E',location:'components/Charm3DIcon.tsx:dragSummary',message:'Drag summary (move counts)',data:{localMoves:localMoveCountRef.current,globalMoves:globalMoveCountRef.current,gapLogged:gapLoggedRef.current},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
         
         // Reset to initial position
@@ -176,11 +184,26 @@ export default function Charm3DIcon({
         // #endregion
       };
 
+      const handleGlobalMove = () => {
+        const now = Date.now();
+        globalMoveCountRef.current += 1;
+        lastGlobalMoveTsRef.current = now;
+        // If the pointer is moving globally but local moves have stopped for a bit, we likely lost pointer events on the canvas.
+        if (!gapLoggedRef.current && lastLocalMoveTsRef.current > 0 && now - lastLocalMoveTsRef.current > 120) {
+          gapLoggedRef.current = true;
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'E',location:'components/Charm3DIcon.tsx:moveGap',message:'Detected global pointermove gap vs local',data:{msSinceLocal:now-lastLocalMoveTsRef.current},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
+      };
+
       window.addEventListener('pointerup', handleGlobalUp);
       window.addEventListener('pointercancel', handleGlobalCancel);
+      window.addEventListener('pointermove', handleGlobalMove, { passive: true });
       return () => {
         window.removeEventListener('pointerup', handleGlobalUp);
         window.removeEventListener('pointercancel', handleGlobalCancel);
+        window.removeEventListener('pointermove', handleGlobalMove as any);
       };
     }
   }, [isDragging, onInteractionChange, cameraZ]);
@@ -191,12 +214,23 @@ export default function Charm3DIcon({
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/Charm3DIcon.tsx:pointerdown',message:'Pointer down',data:{glbPath:!!glbPath,isDragging:true},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
+    // Reset counters for this drag
+    lastLocalMoveTsRef.current = Date.now();
+    lastGlobalMoveTsRef.current = Date.now();
+    gapLoggedRef.current = false;
+    localMoveCountRef.current = 0;
+    globalMoveCountRef.current = 0;
   };
 
   return (
     <div 
       className="w-full h-full"
       onPointerDown={handlePointerDown}
+      onPointerMove={() => {
+        if (!isDragging) return;
+        lastLocalMoveTsRef.current = Date.now();
+        localMoveCountRef.current += 1;
+      }}
     >
       <Canvas 
         camera={{ position: [0, 0, cameraZ], fov: 50 }}
