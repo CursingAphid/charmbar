@@ -185,7 +185,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
                 alt={charm.name}
                 fill
                 className="object-contain"
-                style={{ filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))' }}
+                style={{
+                  filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))',
+                  objectPosition: 'center 60%' // Position content lower in the container to center non-transparent parts
+                }}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 loading="lazy"
               />
