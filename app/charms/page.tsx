@@ -69,17 +69,6 @@ export default function CharmsPage() {
   }, [selectedBracelet, setBracelet, bracelets]);
 
   const filteredCharms = useMemo(() => {
-    console.log('🔍 Filtering charms:', {
-      selectedCategory,
-      allCharmsCount: allCharms.length,
-      sampleCharm: allCharms[0] ? {
-        id: allCharms[0].id,
-        name: allCharms[0].name,
-        tags: allCharms[0].tags,
-        category: allCharms[0].category
-      } : null
-    });
-
     const filtered = allCharms.filter((charm) => {
       const hasTags = charm.tags && charm.tags.length > 0;
       const matchesCategory = selectedCategory === 'All' ||
@@ -90,12 +79,8 @@ export default function CharmsPage() {
         charm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         charm.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      console.log(`🔍 Charm ${charm.name}: hasTags=${hasTags}, tags=${JSON.stringify(charm.tags)}, category=${charm.category}, matchesCategory=${matchesCategory}`);
-
       return matchesCategory && matchesSearch;
     });
-
-    console.log('🔍 Filtered result:', filtered.map(c => ({ id: c.id, name: c.name, tags: c.tags })));
 
     // Sort by: 1) Charms with backgrounds first, 2) Selected charms, 3) Rest
     return [...filtered].sort((a, b) => {

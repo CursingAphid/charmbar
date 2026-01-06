@@ -263,14 +263,6 @@ export async function getCharms(): Promise<Charm[]> {
       tags: charm.charm_tags?.map((ct: any) => ct.tags?.name).filter(Boolean) || []
     }));
 
-    console.log('📦 getCharms result:', charms.map(c => ({
-      id: c.id,
-      name: c.name,
-      tags: c.tags,
-      category: c.category,
-      charm_tags: c.charm_tags // raw data for debugging
-    })));
-
     return charms;
   } catch (error) {
     console.error('Error fetching charms:', error);
@@ -316,7 +308,6 @@ export async function getCharmCategories(): Promise<string[]> {
 
     // Get unique tag names
     const tags: string[] = data?.map((item: any) => item.name as string).filter(Boolean) || [];
-    console.log('🏷️ getCharmCategories result:', ['All', ...tags]);
     return ['All', ...tags];
   } catch (error) {
     console.error('Error fetching charm tags:', error);
