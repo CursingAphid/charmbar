@@ -35,7 +35,10 @@ function Model({ path, color, spin, isDragging, onLoad }: { path: string; color:
   const groupRef = useRef<THREE.Group>(null);
   const frozenRotationRef = useRef<number | null>(null);
   const onLoadRef = useRef(onLoad);
-  onLoadRef.current = onLoad;
+
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+  }, [onLoad]);
 
   // Clone the cached GLTF scene per instance so we don't mutate the shared cache (prevents jumps on re-render)
   const clonedScene = useMemo(() => {
@@ -187,7 +190,6 @@ export default function Charm3DIcon({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(!glbPath); // Initialize as loaded if no glbPath (using Icon3D)
   const handleModelLoaded = useCallback(() => setIsLoaded(true), []);
 
@@ -229,12 +231,6 @@ export default function Charm3DIcon({
     }
   }, [isDragging, cameraZ]); // endDrag closes over latest cameraZ
 
-  // Reset interaction state when component is no longer visible
-  useEffect(() => {
-    return () => {
-      setHasUserInteracted(false);
-    };
-  }, []);
 
   return (
     <div
@@ -298,7 +294,6 @@ export default function Charm3DIcon({
 
               if (moved && !s.didMove) {
                 s.didMove = true;
-                setHasUserInteracted(true);
               }
             }}
             onEnd={() => {

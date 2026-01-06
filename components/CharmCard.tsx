@@ -31,7 +31,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const [isVisible, setIsVisible] = useState(true); // Track if card is visible on screen
   const isPointerInsideRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen) && isVisible;
 
   useEffect(() => {
     // Cleanup blob URLs on unmount to prevent memory leaks
