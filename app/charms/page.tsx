@@ -9,8 +9,8 @@ import CharmCard from '@/components/CharmCard';
 import PreviewCanvas from '@/components/PreviewCanvas';
 import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
-import { motion } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronDown, Info, Image } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ShoppingBag, X, ChevronDown, Info, Image, Eye } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function CharmsPage() {
@@ -30,6 +30,7 @@ export default function CharmsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
 
   // Load data from database
   useEffect(() => {
@@ -69,6 +70,16 @@ export default function CharmsPage() {
       if (gold) setBracelet(gold);
     }
   }, [selectedBracelet, setBracelet, bracelets]);
+
+  // Prevent background scroll when mobile preview is open
+  useEffect(() => {
+    if (!isMobilePreviewOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobilePreviewOpen]);
 
   const filteredCharms = useMemo(() => {
     const filtered = allCharms.filter((charm) => {
@@ -131,7 +142,7 @@ export default function CharmsPage() {
       <Navbar />
 
       {/* Extra bottom padding on mobile so the fixed bottom bar never covers content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-28 lg:pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-32 lg:pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -183,49 +194,56 @@ export default function CharmsPage() {
                   placeholder={t('charms.search.placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none bg-white"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    type="button"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 )}
               </div>
 
-              {/* Background Toggle & Category Filters */}
-              <div className="flex items-center justify-between">
+              {/* Filters Row (mobile-first) */}
+              <div className="flex items-center gap-2">
                 {/* Background Toggle */}
                 <button
                   onClick={toggleCharmBackgrounds}
-                  className={`p-2 rounded-lg border transition-all duration-200 ${
+                  className={[
+                    'shrink-0 p-2.5 rounded-xl border transition-all duration-200',
                     showCharmBackgrounds
                       ? 'bg-pink-500 border-pink-500 text-white shadow-sm'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
-                  }`}
+                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400',
+                  ].join(' ')}
                   title={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
                   aria-label={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                  type="button"
                 >
                   <Image className="w-4 h-4" />
                 </button>
 
-                {/* Category Filters */}
-                <div className="flex flex-wrap gap-2">
-                  {charmCategories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      selectedCategory === category
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:border-pink-300 hover:text-pink-600'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
+                {/* Category Filters (scroll on mobile) */}
+                <div className="flex-1 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+                  <div className="flex gap-2 whitespace-nowrap">
+                    {charmCategories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={[
+                          'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                          selectedCategory === category
+                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:border-pink-300 hover:text-pink-600',
+                        ].join(' ')}
+                        type="button"
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -252,7 +270,7 @@ export default function CharmsPage() {
           </div>
 
           {/* Right Side - Preview */}
-          <div className="lg:col-span-5 order-2 lg:order-2">
+          <div className="hidden lg:block lg:col-span-5 order-2 lg:order-2">
             <div className="lg:sticky lg:top-24">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('charms.preview.title')}</h2>
@@ -317,24 +335,84 @@ export default function CharmsPage() {
         </div>
       </main>
 
-      {/* Mobile Sticky Button */}
-      {selectedCharms.length > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-40">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-gray-900">
+      {/* Mobile Preview Bottom Sheet */}
+      <AnimatePresence>
+        {isMobilePreviewOpen && (
+          <div className="lg:hidden fixed inset-0 z-[60]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsMobilePreviewOpen(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-gray-200 shadow-2xl pb-[env(safe-area-inset-bottom)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{t('charms.preview.title')}</p>
+                  <p className="text-xs text-gray-500">
+                    {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')} {t('charms.selected')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsMobilePreviewOpen(false)}
+                  className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                  aria-label="Close preview"
+                  type="button"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="px-4 pb-4">
+                <div className="h-[55vh]">
+                  <PreviewCanvas />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Sticky Bottom Bar (modern) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg z-50">
+        <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="max-w-7xl mx-auto flex items-center gap-3">
+            <button
+              onClick={() => setIsMobilePreviewOpen(true)}
+              className="shrink-0 h-11 w-11 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 flex items-center justify-center"
+              aria-label={t('charms.preview.title')}
+              type="button"
+            >
+              <Eye className="w-5 h-5" />
+            </button>
+
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">
                 ${getTotalPrice().toFixed(2)}
               </p>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 truncate">
                 {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')} {t('charms.selected')}
               </p>
             </div>
-            <Button onClick={handleAddToCart} className="flex-1">
+
+            <Button
+              onClick={handleAddToCart}
+              className="flex-1"
+              disabled={selectedCharms.length === 0}
+            >
               {t('charms.button.cart')}
             </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
