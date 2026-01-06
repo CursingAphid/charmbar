@@ -89,11 +89,11 @@ export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null
   // Check if charm has a background_id (new API system)
   if (charm.background_id) {
     try {
-      // Use the new API endpoint for background images
-      const response = await fetch(`/api/charms/${charm.id}/background-image`);
+      // Use the flatter API endpoint for background images
+      const response = await fetch(`/api/charm-background/${charm.id}`);
       if (response.ok) {
         // Return the API endpoint URL for the image
-        return `/api/charms/${charm.id}/background-image`;
+        return `/api/charm-background/${charm.id}`;
       }
     } catch (error) {
       console.error('Error fetching background image:', error);
