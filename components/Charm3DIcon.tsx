@@ -30,7 +30,7 @@ function SceneCleanup() {
 }
 
 // Model component for GLB files
-function Model({ path, color, spin, isDragging }: { path: string; color: string; spin: boolean; isDragging: boolean }) {
+function Model({ path, color, spin, isDragging, onLoad }: { path: string; color: string; spin: boolean; isDragging: boolean; onLoad?: () => void }) {
   const { scene } = useGLTF(path);
   const meshRef = useRef<THREE.Group>(null);
 
@@ -42,8 +42,10 @@ function Model({ path, color, spin, isDragging }: { path: string; color: string;
       scene.position.x += (scene.position.x - center.x);
       scene.position.y += (scene.position.y - center.y);
       scene.position.z += (scene.position.z - center.z);
+      // Call onLoad when the model is ready
+      onLoad?.();
     }
-  }, [scene]);
+  }, [scene, onLoad]);
 
   useFrame((state) => {
     if (meshRef.current && !isDragging) {
@@ -140,8 +142,8 @@ function Icon3D({ iconName, color, spin, isDragging }: { iconName: string; color
   }
 }
 
-export default function Charm3DIcon({ 
-  iconName = 'Heart', 
+export default function Charm3DIcon({
+  iconName = 'Heart',
   glbPath,
   size = 1,
   color = '#ec4899',
@@ -152,6 +154,14 @@ export default function Charm3DIcon({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // If using Icon3D (no glbPath), consider it loaded immediately
+    if (!glbPath) {
+      setIsLoaded(true);
+    }
+  }, [glbPath]);
 
   // Use useEffect to handle global pointer up for when dragging ends outside the element
   useEffect(() => {
@@ -181,11 +191,16 @@ export default function Charm3DIcon({
   };
 
   return (
-    <div 
-      className="w-full h-full"
+    <div
+      className="w-full h-full relative"
       onPointerDown={handlePointerDown}
     >
-      <Canvas 
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <LoadingSpinner size="md" color="#ec4899" />
+        </div>
+      )}
+      <Canvas
         camera={{ position: [0, 0, cameraZ], fov: 50 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         onCreated={({ camera }) => {
@@ -193,13 +208,13 @@ export default function Charm3DIcon({
         }}
       >
         <SceneCleanup />
-        <Suspense fallback={<LoadingSpinner size="md" color="#ec4899" />}>
+        <Suspense fallback={null}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 5]} intensity={1} />
           <pointLight position={[-10, -10, -5]} intensity={0.5} />
           <group scale={size}>
             {glbPath ? (
-              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} />
+              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} onLoad={() => setIsLoaded(true)} />
             ) : (
               <Icon3D iconName={iconName} color={color} spin={spin} isDragging={isDragging} />
             )}
