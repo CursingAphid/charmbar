@@ -126,7 +126,8 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
 
       // Create blob and blob URL for better performance
       if (typeof window !== 'undefined') {
-        const blob = new Blob([buffer], { type: mimeType });
+        const uint8Array = new Uint8Array(buffer);
+        const blob = new Blob([uint8Array], { type: mimeType });
         const blobUrl = URL.createObjectURL(blob);
         glbCache.set(charm.id, blobUrl);
         return blobUrl;
