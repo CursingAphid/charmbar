@@ -6,21 +6,30 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('🔍 Background image API called for charm:', params.id);
+
     // Get the charm to find its background_id
     const charm = await getCharmById(params.id);
+    console.log('📦 Charm data:', charm);
 
     if (!charm) {
+      console.log('❌ Charm not found:', params.id);
       return NextResponse.json({ error: 'Charm not found' }, { status: 404 });
     }
 
+    console.log('🎨 Charm background_id:', charm.background_id);
+
     if (!charm.background_id) {
+      console.log('❌ Charm has no background_id');
       return NextResponse.json({ error: 'Charm has no background' }, { status: 404 });
     }
 
     // Get the background data
     const background = await getBackgroundById(charm.background_id.toString());
+    console.log('🖼️ Background data:', background);
 
     if (!background || !background.image_data) {
+      console.log('❌ Background image not found');
       return NextResponse.json({ error: 'Background image not found' }, { status: 404 });
     }
 
