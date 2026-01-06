@@ -227,9 +227,6 @@ export default function CharmsPage() {
               <div className="relative z-40" ref={filterDropdownRef}>
                 <button
                   onClick={() => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'dropdown-zindex-fix',hypothesisId:'dropdown-toggle',location:'app/charms/page.tsx:toggle-click',message:'Dropdown button clicked',data:{currentState:showFilterDropdown},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     setShowFilterDropdown(!showFilterDropdown);
                   }}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
