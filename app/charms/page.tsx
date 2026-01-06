@@ -25,7 +25,7 @@ export default function CharmsPage() {
   const [bracelets, setBracelets] = useState<Bracelet[]>([]);
   const [allCharms, setAllCharms] = useState<Charm[]>([]);
   const [charmCategories, setCharmCategories] = useState<string[]>(['All']);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['All']);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -84,9 +84,13 @@ export default function CharmsPage() {
   const filteredCharms = useMemo(() => {
     const filtered = allCharms.filter((charm) => {
       const hasTags = charm.tags && charm.tags.length > 0;
-      const matchesCategory = selectedCategory === 'All' ||
-        (hasTags && charm.tags!.includes(selectedCategory)) ||
-        (!hasTags && charm.category === selectedCategory); // fallback for charms without tags
+
+      // Check if charm matches any selected category
+      const matchesCategory = selectedCategories.includes('All') ||
+        selectedCategories.some(selectedCat =>
+          (hasTags && charm.tags!.includes(selectedCat)) ||
+          (!hasTags && charm.category === selectedCat)
+        );
 
       const matchesSearch =
         charm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -112,7 +116,7 @@ export default function CharmsPage() {
 
       return 0;
     });
-  }, [allCharms, selectedCategory, searchQuery, selectedCharms]);
+  }, [allCharms, selectedCategories, searchQuery, selectedCharms]);
 
   // Handle clicks outside the filter dropdown
   useEffect(() => {
@@ -151,6 +155,28 @@ export default function CharmsPage() {
     router.push('/cart');
   };
 
+  const handleCategoryToggle = (category: string) => {
+    setSelectedCategories(prev => {
+      if (category === 'All') {
+        // Clicking "All" always selects only "All"
+        return ['All'];
+      }
+
+      // Remove "All" if it was selected and we're selecting a specific category
+      const withoutAll = prev.filter(cat => cat !== 'All');
+
+      if (withoutAll.includes(category)) {
+        // Category is already selected, remove it
+        const newSelection = withoutAll.filter(cat => cat !== category);
+        // If no categories left, select "All"
+        return newSelection.length === 0 ? ['All'] : newSelection;
+      } else {
+        // Category is not selected, add it
+        return [...withoutAll, category];
+      }
+    });
+  };
+
   const totalCharmsCount = selectedCharms.length;
 
   return (
@@ -164,7 +190,7 @@ export default function CharmsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
             {t('charms.title')}
           </h1>
           <p className="text-gray-600">
@@ -230,15 +256,17 @@ export default function CharmsPage() {
                     setShowFilterDropdown(!showFilterDropdown);
                   }}
                   className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-                    showFilterDropdown || selectedCategory !== 'All'
-                      ? 'bg-pink-50 border-pink-300 text-pink-700'
+                    showFilterDropdown || !selectedCategories.includes('All')
+                      ? 'bg-amber-50 border-amber-300 text-amber-700'
                       : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
                   }`}
                   type="button"
                 >
                   <Filter className="w-4 h-4" />
                   <span className="text-sm font-medium">
-                    {selectedCategory === 'All' ? 'All Tags' : selectedCategory}
+                    {selectedCategories.includes('All') ? 'All Tags' :
+                     selectedCategories.length === 1 ? selectedCategories[0] :
+                     `${selectedCategories.length} Tags`}
                   </span>
                   <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -249,11 +277,13 @@ export default function CharmsPage() {
                       <div className="py-2">
                         <button
                           onClick={() => {
-                            setSelectedCategory('All');
+                            handleCategoryToggle('All');
                             setShowFilterDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-3 text-sm hover:bg-pink-50 transition-colors ${
-                            selectedCategory === 'All' ? 'bg-pink-50 text-pink-700 font-medium' : 'text-gray-700'
+                          className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${
+                            selectedCategories.includes('All')
+                              ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
+                              : 'text-gray-700'
                           }`}
                           type="button"
                         >
@@ -263,11 +293,13 @@ export default function CharmsPage() {
                           <button
                             key={category}
                             onClick={() => {
-                              setSelectedCategory(category);
+                              handleCategoryToggle(category);
                               setShowFilterDropdown(false);
                             }}
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-pink-50 transition-colors ${
-                              selectedCategory === category ? 'bg-pink-50 text-pink-700 font-medium' : 'text-gray-700'
+                            className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${
+                              selectedCategories.includes(category)
+                                ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
+                                : 'text-gray-700'
                             }`}
                             type="button"
                           >
@@ -285,12 +317,17 @@ export default function CharmsPage() {
                   {charmCategories.map((category) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => handleCategoryToggle(category)}
                       className={[
                         'px-4 py-2 rounded-full text-sm font-medium transition-all',
-                        selectedCategory === category
-                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
-                          : 'bg-white text-gray-700 border border-gray-300 hover:border-pink-300 hover:text-pink-600',
+                        selectedCategories.includes(category)
+                          ? [
+                              // Metallic-ish gold gradient (multi-stop)
+                              "bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)]",
+                              'text-gray-900',
+                              'ring-1 ring-black/10',
+                            ].join(' ')
+                          : 'bg-white text-gray-700 border border-gray-300 hover:border-amber-300 hover:text-amber-700',
                       ].join(' ')}
                       type="button"
                     >
@@ -348,7 +385,7 @@ export default function CharmsPage() {
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">{t('charms.summary.bracelet')}</span>
-                    <span className="font-semibold">${selectedBracelet.price.toFixed(2)}</span>
+                    <span className="font-semibold">€{selectedBracelet.price.toFixed(2)}</span>
                   </div>
                   {selectedCharms.length > 0 && (
                     <div className="flex justify-between text-sm">

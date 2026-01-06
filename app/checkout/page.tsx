@@ -75,7 +75,7 @@ export default function CheckoutPage() {
             Back to Cart
           </Link>
 
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] bg-clip-text text-transparent mb-8">
             Checkout
           </h1>
 

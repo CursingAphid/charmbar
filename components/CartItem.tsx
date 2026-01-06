@@ -113,7 +113,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                           </span>
                         )}
                         <span className="text-sm text-gray-600">
-                          ${(group.charm.price * group.quantity).toFixed(2)}
+                          €{(group.charm.price * group.quantity).toFixed(2)}
                         </span>
                       </div>
                     </div>

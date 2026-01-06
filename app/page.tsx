@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { getCharmsWithBackgrounds, type Charm } from '@/data/products';
 import { getCharmImageUrl } from '@/lib/db';
@@ -15,27 +15,65 @@ import { Sparkles, MousePointerClick, ShoppingBag, Truck, CheckCircle } from 'lu
 import Charm3DIcon from '@/components/Charm3DIcon';
 import { useToast } from '@/components/ToastProvider';
 
-function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: { 
-  charm: any; 
-  selectedCharms: any[]; 
-  addCharm: (c: any) => void; 
-  t: any; 
+function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: {
+  charm: any;
+  selectedCharms: any[];
+  addCharm: (c: any) => void;
+  t: any;
   showToast: any;
   router: any;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const cardRef = useRef<HTMLDivElement>(null);
   const isAdded = selectedCharms.some((sc) => sc.charm.id === charm.id);
 
+  // Intersection observer to reset 3D models on mobile when off-screen
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    // Only apply on mobile devices
+    const isMobile = window.innerWidth < 768;
+
+    if (!isMobile) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const isIntersecting = entry.isIntersecting;
+          setIsVisible(isIntersecting);
+
+          // Reset hover state when card goes off-screen on mobile
+          if (!isIntersecting && isHovered && !isInteracting) {
+            setIsHovered(false);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+      }
+    );
+
+    observer.observe(card);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isHovered, isInteracting]);
+
   return (
-    <Card 
-      key={charm.id} 
+    <Card
+      ref={cardRef}
+      key={charm.id}
       className="border border-pink-100 bg-white shadow-sm hover:shadow-md transition-shadow"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="h-40 sm:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-3 sm:p-4">
-        {(charm.glbPath || charm.icon3d) && (isHovered || isInteracting) ? (
+        {(charm.glbPath || charm.icon3d) && (isHovered || isInteracting) && isVisible ? (
           <div className="w-full h-full">
             <Charm3DIcon
               iconName={charm.icon3d}
@@ -62,7 +100,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
       <div className="p-3 sm:p-5 text-center">
         <div className="mb-2 sm:mb-4">
           <p className="font-semibold text-sm sm:text-lg text-gray-900 mb-0.5 sm:mb-1 truncate">{charm.name}</p>
-          <p className="text-gray-600 text-xs sm:text-base">${charm.price.toFixed(2)}</p>
+          <p className="text-gray-600 text-xs sm:text-base">€{charm.price.toFixed(2)}</p>
         </div>
 
         <Button
@@ -398,7 +436,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               {t('home.howItWorks.title')}
             </h2>
-            <div className="w-20 h-1.5 bg-gradient-to-r from-pink-500 to-purple-600 mx-auto rounded-full" />
+            <div className="w-20 h-1.5 bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] mx-auto rounded-full" />
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">

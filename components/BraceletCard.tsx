@@ -44,7 +44,7 @@ export default function BraceletCard({ bracelet, isSelected, onSelect }: Bracele
             <span className="text-xs text-gray-500">{bracelet.material}</span>
             <span className="text-xs text-gray-500">{bracelet.color}</span>
           </div>
-          <span className="text-lg font-bold text-pink-600">${bracelet.price.toFixed(2)}</span>
+          <span className="text-lg font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">€{bracelet.price.toFixed(2)}</span>
         </div>
       </div>
       

@@ -21,6 +21,7 @@ export default function PreviewCanvas() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [pinchStart, setPinchStart] = useState<{ distance: number; zoom: number } | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const expandedViewportRef = useRef<HTMLDivElement>(null);
   const [viewportSize, setViewportSize] = useState({ w: 800, h: 350 });
@@ -125,6 +126,24 @@ export default function PreviewCanvas() {
     });
   };
 
+  // Mouse wheel handler for zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+    setZoom((z) => {
+      const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z + delta));
+      setPan((prev) => clampPan(prev, next));
+      return next;
+    });
+  };
+
+  // Calculate distance between two touch points
+  const getTouchDistance = (touch1: Touch, touch2: Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
   // Measure viewport so pan clamping is correct in normal + expanded views
   useEffect(() => {
     const activeRef = isExpanded ? expandedViewportRef.current : viewportRef.current;
@@ -185,28 +204,51 @@ export default function PreviewCanvas() {
     setIsDragging(false);
   };
 
-  // Touch handlers for mobile
+  // Touch handlers for mobile - supports both panning and pinch-to-zoom
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!canPan || e.touches.length !== 1) return;
-    setIsDragging(true);
-    setDragStart({
-      x: e.touches[0].clientX - clampedPan.x,
-      y: e.touches[0].clientY - clampedPan.y,
-    });
+    if (e.touches.length === 2) {
+      // Pinch start
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setPinchStart({ distance, zoom });
+    } else if (e.touches.length === 1 && canPan) {
+      // Single touch panning
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - clampedPan.x,
+        y: e.touches[0].clientY - clampedPan.y,
+      });
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !canPan || e.touches.length !== 1) return;
-    e.preventDefault(); // Prevent scrolling
-    const raw = {
-      x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y,
-    };
-    setPan(clampPan(raw, zoom));
+    if (e.touches.length === 2 && pinchStart) {
+      // Pinch zoom
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const scale = currentDistance / pinchStart.distance;
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStart.zoom * scale));
+      setZoom(newZoom);
+      setPan((prev) => clampPan(prev, newZoom));
+    } else if (e.touches.length === 1 && isDragging && canPan) {
+      // Single touch panning
+      e.preventDefault(); // Prevent scrolling
+      const raw = {
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y,
+      };
+      setPan(clampPan(raw, zoom));
+    }
   };
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      // All touches ended
+      setIsDragging(false);
+      setPinchStart(null);
+    } else if (e.touches.length === 1 && pinchStart) {
+      // Pinch ended, one finger still down - could start panning
+      setPinchStart(null);
+    }
   };
 
   // Reset zoom and pan
@@ -289,7 +331,7 @@ export default function PreviewCanvas() {
             className="w-full max-w-[1000px] aspect-[800/420] sm:aspect-[800/350] rounded-lg overflow-hidden bg-pink-50 relative"
           >
             <motion.div
-              key={`${selectedBracelet.openImage || selectedBracelet.image}:${totalCharms}`}
+              key={selectedBracelet.openImage || selectedBracelet.image}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
@@ -306,6 +348,7 @@ export default function PreviewCanvas() {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
+                onWheel={handleWheel}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -324,24 +367,25 @@ export default function PreviewCanvas() {
                   const position = charmPositions[index];
                   if (!position) return null;
 
-                  return (
-                    <motion.div
-                      key={selectedCharm.id}
-                      initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                      className="absolute z-10"
-                      style={{
-                        // Position: scale from 800x300 coordinate system
-                        left: `${(position.x / 800) * 100}%`,
-                        top: `${(position.y / 300) * 100}%`,
-                        // Size: scale proportionally (150px in 800px = 18.75% width, maintain square)
-                        width: '18.75%', // 150/800 = 18.75%
-                        aspectRatio: '1 / 1', // Keep square
-                        transform: 'translateX(-50%)',
-                      }}
-                    >
+                                  return (
+                                    <motion.div
+                                      key={selectedCharm.id}
+                                      layout
+                                      initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.9 }}
+                                      transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+                                      className="absolute z-10"
+                                      style={{
+                                        // Position: scale from 800x300 coordinate system
+                                        left: `${(position.x / 800) * 100}%`,
+                                        top: `${(position.y / 300) * 100}%`,
+                                        // Size: scale proportionally (150px in 800px = 18.75% width, maintain square)
+                                        width: '18.75%', // 150/800 = 18.75%
+                                        aspectRatio: '1 / 1', // Keep square
+                                        transform: 'translateX(-50%)',
+                                      }}
+                                    >
                       <div className="relative w-full h-full pointer-events-none">
                         <Image
                           src={getCharmImageUrl(selectedCharm.charm)}
@@ -390,12 +434,12 @@ export default function PreviewCanvas() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-pink-600">
-              ${selectedBracelet.price.toFixed(2)}
-            </p>
+                      <p className="text-sm font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
+                        €{selectedBracelet.price.toFixed(2)}
+                      </p>
             {selectedCharms.length > 0 && (
               <p className="text-xs text-gray-500">
-                + ${selectedCharms.reduce((sum, sc) => sum + sc.charm.price, 0).toFixed(2)} {totalCharms !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}
+                + €{selectedCharms.reduce((sum, sc) => sum + sc.charm.price, 0).toFixed(2)} {totalCharms !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}
               </p>
             )}
           </div>
@@ -411,12 +455,14 @@ export default function PreviewCanvas() {
               axis="x"
               values={selectedCharms}
               onReorder={reorderCharms}
+              layout
               className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
             >
               {selectedCharms.map((item) => (
                 <Reorder.Item
                   key={item.id}
                   value={item}
+                  layout
                   className="flex-shrink-0 group relative"
                 >
                   <div className="w-12 h-12 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-1 relative cursor-grab active:cursor-grabbing">
@@ -537,7 +583,7 @@ export default function PreviewCanvas() {
                       className="w-full aspect-[800/350] rounded-lg overflow-hidden bg-pink-50 relative"
                     >
                       <motion.div
-                        key={`${selectedBracelet.openImage || selectedBracelet.image}:${totalCharms}`}
+                        key={selectedBracelet.openImage || selectedBracelet.image}
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.25 }}
@@ -554,6 +600,7 @@ export default function PreviewCanvas() {
                           onMouseDown={handleMouseDown}
                           onMouseUp={handleMouseUp}
                           onMouseLeave={handleMouseLeave}
+                          onWheel={handleWheel}
                           onTouchStart={handleTouchStart}
                           onTouchMove={handleTouchMove}
                           onTouchEnd={handleTouchEnd}
@@ -575,6 +622,7 @@ export default function PreviewCanvas() {
                                 return (
                                   <motion.div
                                     key={selectedCharm.id}
+                                    layout
                                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
@@ -638,12 +686,12 @@ export default function PreviewCanvas() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-pink-600">
+                      <p className="text-sm font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
                         €{selectedBracelet.price.toFixed(2)}
                       </p>
                       {selectedCharms.length > 0 && (
                         <p className="text-xs text-gray-500">
-                          + ${selectedCharms.reduce((sum, sc) => sum + sc.charm.price, 0).toFixed(2)} {totalCharms !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}
+                          + €{selectedCharms.reduce((sum, sc) => sum + sc.charm.price, 0).toFixed(2)} {totalCharms !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}
                         </p>
                       )}
                     </div>
@@ -659,12 +707,14 @@ export default function PreviewCanvas() {
                         axis="x"
                         values={selectedCharms}
                         onReorder={reorderCharms}
+                        layout
                         className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
                       >
                         {selectedCharms.map((item) => (
                           <Reorder.Item
                             key={item.id}
                             value={item}
+                            layout
                             className="flex-shrink-0 group relative"
                           >
                             <div className="w-12 h-12 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-1 relative cursor-grab active:cursor-grabbing">

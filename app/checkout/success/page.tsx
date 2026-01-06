@@ -24,7 +24,7 @@ export default function CheckoutSuccessPage() {
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="mb-6"
           >
-            <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-20 h-20 bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] rounded-full flex items-center justify-center mx-auto shadow-lg">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
           </motion.div>
@@ -33,7 +33,7 @@ export default function CheckoutSuccessPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4"
+            className="text-4xl md:text-5xl font-bold bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] bg-clip-text text-transparent mb-4"
           >
             Order Confirmed!
           </motion.h1>

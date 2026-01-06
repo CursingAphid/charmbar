@@ -25,7 +25,7 @@ export default function Navbar() {
             >
               ✨
             </motion.div>
-            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent truncate max-w-[10.5rem] sm:max-w-none">
+            <span className="text-lg sm:text-xl font-bold bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] bg-clip-text text-transparent truncate max-w-[10.5rem] sm:max-w-none">
               charmbazaar
             </span>
           </Link>

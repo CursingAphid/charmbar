@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState, useEffect } from 'react';
+import { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -32,38 +32,50 @@ function SceneCleanup() {
 // Model component for GLB files
 function Model({ path, color, spin, isDragging, onLoad }: { path: string; color: string; spin: boolean; isDragging: boolean; onLoad?: () => void }) {
   const { scene } = useGLTF(path);
-  const meshRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const frozenRotationRef = useRef<number | null>(null);
+  const onLoadRef = useRef(onLoad);
+  onLoadRef.current = onLoad;
+
+  // Clone the cached GLTF scene per instance so we don't mutate the shared cache (prevents jumps on re-render)
+  const clonedScene = useMemo(() => {
+    // Deep clone: isolates position/rotation changes from other instances and from StrictMode double-effects
+    return scene.clone(true);
+  }, [scene]);
 
   useEffect(() => {
-    if (scene && meshRef.current) {
-      // Center the model by adjusting the mesh position instead of modifying scene
-      const box = new THREE.Box3().setFromObject(scene);
+    if (clonedScene && groupRef.current) {
+      // Center the model by adjusting a wrapper group (do NOT mutate the cached scene)
+      const box = new THREE.Box3().setFromObject(clonedScene);
       const center = box.getCenter(new THREE.Vector3());
-      meshRef.current.position.set(-center.x, -center.y, -center.z);
+      groupRef.current.position.set(-center.x, -center.y, -center.z);
       // Call onLoad when the model is ready
-      onLoad?.();
+      onLoadRef.current?.();
     }
-  }, [scene, onLoad]);
+  }, [clonedScene, path]);
 
   useFrame((state) => {
-    if (meshRef.current) {
+    if (groupRef.current) {
       if (spin && !isDragging) {
         // Continue/update spinning
-        meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+        groupRef.current.rotation.y = state.clock.elapsedTime * 0.5;
         frozenRotationRef.current = null; // Clear frozen rotation
       } else if (spin && isDragging) {
         // Freeze rotation at current position during drag
         if (frozenRotationRef.current === null) {
-          frozenRotationRef.current = meshRef.current.rotation.y;
+          frozenRotationRef.current = groupRef.current.rotation.y;
         }
-        meshRef.current.rotation.y = frozenRotationRef.current;
+        groupRef.current.rotation.y = frozenRotationRef.current;
       }
       // If not spinning at all, do nothing
     }
   });
 
-  return <primitive ref={meshRef} object={scene} />;
+  return (
+    <group ref={groupRef}>
+      <primitive object={clonedScene} />
+    </group>
+  );
 }
 
 // Preload common GLB models
@@ -175,18 +187,32 @@ export default function Charm3DIcon({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(!glbPath); // Initialize as loaded if no glbPath (using Icon3D)
+  const handleModelLoaded = useCallback(() => setIsLoaded(true), []);
+
+  const dragStartRef = useRef<{
+    cam: { x: number; y: number; z: number };
+    target: { x: number; y: number; z: number };
+    didMove: boolean;
+    lastChangeLogTs: number;
+  } | null>(null);
 
   const endDrag = () => {
     setIsDragging(false);
     onInteractionChange?.(false);
 
-    // Reset to initial position
-    if (controlsRef.current && cameraRef.current) {
+    const didMove = dragStartRef.current?.didMove ?? false;
+
+    // Only reset camera position if the user actually moved the controls (not just clicked)
+    if (didMove && controlsRef.current && cameraRef.current) {
+      // Smooth transition back to initial position
       cameraRef.current.position.set(0, 0, cameraZ);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
+
+    dragStartRef.current = null;
   };
 
   // Use useEffect to handle global pointer up for when dragging ends outside the element
@@ -202,6 +228,13 @@ export default function Charm3DIcon({
       };
     }
   }, [isDragging, cameraZ]); // endDrag closes over latest cameraZ
+
+  // Reset interaction state when component is no longer visible
+  useEffect(() => {
+    return () => {
+      setHasUserInteracted(false);
+    };
+  }, []);
 
   return (
     <div
@@ -226,7 +259,7 @@ export default function Charm3DIcon({
           <pointLight position={[-10, -10, -5]} intensity={0.5} />
           <group scale={size}>
             {glbPath ? (
-              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} onLoad={() => setIsLoaded(true)} />
+              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} onLoad={handleModelLoaded} />
             ) : (
               <Icon3D iconName={iconName} color={color} spin={spin} isDragging={isDragging} />
             )}
@@ -238,7 +271,35 @@ export default function Charm3DIcon({
             autoRotate={false}
             onStart={() => {
               setIsDragging(true);
+              // Record start pose; we only count as "interaction" if we actually move
+              if (cameraRef.current && controlsRef.current) {
+                dragStartRef.current = {
+                  cam: { x: cameraRef.current.position.x, y: cameraRef.current.position.y, z: cameraRef.current.position.z },
+                  target: { x: controlsRef.current.target.x, y: controlsRef.current.target.y, z: controlsRef.current.target.z },
+                  didMove: false,
+                  lastChangeLogTs: 0,
+                };
+              }
               onInteractionChange?.(true);
+            }}
+            onChange={() => {
+              const s = dragStartRef.current;
+              const cam = cameraRef.current;
+              const ctl = controlsRef.current;
+              if (!s || !cam || !ctl) return;
+
+              const moved =
+                Math.abs(cam.position.x - s.cam.x) > 0.02 ||
+                Math.abs(cam.position.y - s.cam.y) > 0.02 ||
+                Math.abs(cam.position.z - s.cam.z) > 0.02 ||
+                Math.abs(ctl.target.x - s.target.x) > 0.02 ||
+                Math.abs(ctl.target.y - s.target.y) > 0.02 ||
+                Math.abs(ctl.target.z - s.target.z) > 0.02;
+
+              if (moved && !s.didMove) {
+                s.didMove = true;
+                setHasUserInteracted(true);
+              }
             }}
             onEnd={() => {
               endDrag();

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface CardProps {
@@ -10,14 +10,14 @@ interface CardProps {
   hover?: boolean;
 }
 
-export default function Card({ 
-  children, 
-  className = '', 
-  onClick, 
+const Card = forwardRef<HTMLDivElement, CardProps>(function Card({
+  children,
+  className = '',
+  onClick,
   onMouseEnter,
   onMouseLeave,
-  hover = false 
-}: CardProps) {
+  hover = false
+}, ref) {
   const baseStyles = 'bg-white rounded-xl shadow-md overflow-hidden';
   // Keep hover stable (no shadow/transform changes) to avoid any perceived "movement"
   const interactiveStyles = onClick || hover ? 'cursor-pointer' : '';
@@ -30,6 +30,7 @@ export default function Card({
   
   return (
     <Component
+      ref={ref}
       {...(motionProps as any)}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -39,5 +40,9 @@ export default function Card({
       {children}
     </Component>
   );
-}
+});
+
+Card.displayName = 'Card';
+
+export default Card;
 
