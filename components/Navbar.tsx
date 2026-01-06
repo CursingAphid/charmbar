@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Languages, Image } from 'lucide-react';
+import { ShoppingCart, Languages } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
@@ -10,8 +10,6 @@ import { useState } from 'react';
 export default function Navbar() {
   const cart = useStore((state) => state.cart);
   const cartItemCount = cart.length;
-  const showCharmBackgrounds = useStore((state) => state.showCharmBackgrounds);
-  const toggleCharmBackgrounds = useStore((state) => state.toggleCharmBackgrounds);
   const { language, setLanguage, t } = useLanguage();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
@@ -82,20 +80,6 @@ export default function Navbar() {
                 </>
               )}
             </div>
-
-            {/* Background Toggle */}
-            <button
-              onClick={toggleCharmBackgrounds}
-              className={`h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg hover:bg-pink-50/50 transition-colors ${
-                showCharmBackgrounds
-                  ? 'text-pink-600 bg-pink-50/50'
-                  : 'text-gray-600 hover:text-pink-600'
-              }`}
-              title={showCharmBackgrounds ? t('nav.backgroundsOn') : t('nav.backgroundsOff')}
-              type="button"
-            >
-              <Image className="w-5 h-5" />
-            </button>
 
             <Link
               href="/cart"

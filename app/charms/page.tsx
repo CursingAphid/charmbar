@@ -10,7 +10,7 @@ import PreviewCanvas from '@/components/PreviewCanvas';
 import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronDown, Info } from 'lucide-react';
+import { Search, ShoppingBag, X, ChevronDown, Info, Image } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function CharmsPage() {
@@ -20,6 +20,8 @@ export default function CharmsPage() {
   const selectedCharms = useStore((state) => state.selectedCharms);
   const addToCart = useStore((state) => state.addToCart);
   const getTotalPrice = useStore((state) => state.getTotalPrice);
+  const showCharmBackgrounds = useStore((state) => state.showCharmBackgrounds);
+  const toggleCharmBackgrounds = useStore((state) => state.toggleCharmBackgrounds);
   const { t } = useLanguage();
 
   const [bracelets, setBracelets] = useState<Bracelet[]>([]);
@@ -193,9 +195,29 @@ export default function CharmsPage() {
                 )}
               </div>
 
-              {/* Category Filters */}
-              <div className="flex flex-wrap gap-2">
-                {charmCategories.map((category) => (
+              {/* Background Toggle & Category Filters */}
+              <div className="flex items-center justify-between">
+                {/* Background Toggle */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleCharmBackgrounds}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                      showCharmBackgrounds
+                        ? 'bg-pink-50 border-pink-200 text-pink-600'
+                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                  >
+                    <Image className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Category Filters */}
+                <div className="flex flex-wrap gap-2">
+                  {charmCategories.map((category) => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
@@ -208,6 +230,7 @@ export default function CharmsPage() {
                     {category}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
 

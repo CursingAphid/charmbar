@@ -18,8 +18,6 @@ const translations = {
     'nav.home': 'Home',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
-    'nav.backgroundsOn': 'Charm backgrounds: On',
-    'nav.backgroundsOff': 'Charm backgrounds: Off',
     
     // Home page
     'home.hero.title': 'Create Your Perfect',
@@ -61,6 +59,8 @@ const translations = {
     'charms.noResults': 'No charms found matching your search.',
     'charms.selected': 'selected',
     'charms.limitReached': 'Maximum 7 charms allowed',
+    'charms.backgroundsOn': 'Backgrounds On',
+    'charms.backgroundsOff': 'Backgrounds Off',
     
     // Cart
     'cart.title': 'Shopping Cart',
@@ -83,8 +83,6 @@ const translations = {
     'nav.home': 'Home',
     'nav.cart': 'Winkelwagen',
     'nav.language': 'Taal',
-    'nav.backgroundsOn': 'Charm achtergronden: Aan',
-    'nav.backgroundsOff': 'Charm achtergronden: Uit',
     
     // Home page
     'home.hero.title': 'Creëer Je Perfecte',
@@ -126,6 +124,8 @@ const translations = {
     'charms.noResults': 'Geen charms gevonden die overeenkomen met je zoekopdracht.',
     'charms.selected': 'geselecteerd',
     'charms.limitReached': 'Maximaal 7 charms toegestaan',
+    'charms.backgroundsOn': 'Achtergronden Aan',
+    'charms.backgroundsOff': 'Achtergronden Uit',
     
     // Cart
     'cart.title': 'Winkelwagen',
