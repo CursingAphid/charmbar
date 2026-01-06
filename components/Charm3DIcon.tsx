@@ -154,37 +154,18 @@ export default function Charm3DIcon({
   const [isDragging, setIsDragging] = useState(false);
   const [isLoaded, setIsLoaded] = useState(!glbPath); // Initialize as loaded if no glbPath (using Icon3D)
 
-  // Use useEffect to handle global pointer up for when dragging ends outside the element
+  // Reset camera position when not dragging
   useEffect(() => {
-    if (isDragging) {
-      const handleGlobalUp = () => {
-        setIsDragging(false);
-        onInteractionChange?.(false);
-
-        // Reset to initial position
-        if (controlsRef.current && cameraRef.current) {
-          cameraRef.current.position.set(0, 0, cameraZ);
-          controlsRef.current.target.set(0, 0, 0);
-          controlsRef.current.update();
-        }
-      };
-
-      window.addEventListener('pointerup', handleGlobalUp);
-      return () => {
-        window.removeEventListener('pointerup', handleGlobalUp);
-      };
+    if (!isDragging && controlsRef.current && cameraRef.current) {
+      cameraRef.current.position.set(0, 0, cameraZ);
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
     }
-  }, [isDragging, onInteractionChange, cameraZ]);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsDragging(true);
-    onInteractionChange?.(true);
-  };
+  }, [isDragging, cameraZ]);
 
   return (
     <div
       className="w-full h-full relative"
-      onPointerDown={handlePointerDown}
     >
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -215,6 +196,14 @@ export default function Charm3DIcon({
             enableZoom={false}
             enablePan={false}
             autoRotate={false}
+            onStart={() => {
+              setIsDragging(true);
+              onInteractionChange?.(true);
+            }}
+            onEnd={() => {
+              setIsDragging(false);
+              onInteractionChange?.(false);
+            }}
           />
           <Environment preset="sunset" />
         </Suspense>
