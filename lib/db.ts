@@ -110,16 +110,24 @@ const getLocalGlbPath = (charmId: string): string | undefined => {
 };
 
 export function getCharmGlbUrl(charm: Charm): string | undefined {
-  // For now, use local GLB files instead of database binary data
+  if (charm.glb_data) {
+    try {
+      // Convert bytea hex data to Buffer, then to base64 data URL
+      const buffer = bufferFromByteaField(charm.glb_data);
+      const base64 = buffer.toString('base64');
+      const mimeType = charm.glb_mimetype || 'model/gltf-binary';
+      return `data:${mimeType};base64,${base64}`;
+    } catch (error) {
+      console.error('Error converting GLB data for charm:', charm.id, error);
+      // Fallback to local file
+      return getLocalGlbPath(charm.id);
+    }
+  }
+
+  // Fallback to local GLB files if no database data
   return getLocalGlbPath(charm.id);
 
-  // TODO: Uncomment when GLB binary data handling is working
-  // if (charm.glb_data) {
-  //   // For GLB files, we'll need to create a download URL
-  //   // This is handled differently - return the data for download
-  //   return undefined; // GLB download is handled separately
-  // }
-  // // Fallback to legacy GLB path
+  // Final fallback to legacy GLB path
   // return charm.glbPath;
 }
 
