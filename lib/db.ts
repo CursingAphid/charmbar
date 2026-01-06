@@ -206,7 +206,6 @@ export async function getBackgrounds(): Promise<Background[]> {
 
 export async function getBackgroundById(id: string): Promise<Background | null> {
   try {
-    console.log('🎨 Fetching background by ID:', id);
     const { data, error } = await supabase
       .from('backgrounds')
       .select('*')
@@ -214,14 +213,13 @@ export async function getBackgroundById(id: string): Promise<Background | null> 
       .single();
 
     if (error) {
-      console.error('❌ Error fetching background:', error);
+      console.error('Error fetching background:', error);
       return null;
     }
 
-    console.log('✅ Background fetched:', data);
     return data;
   } catch (error) {
-    console.error('❌ Error in getBackgroundById:', error);
+    console.error('Error in getBackgroundById:', error);
     return null;
   }
 }
@@ -325,7 +323,6 @@ export async function getBraceletById(id: string): Promise<Bracelet | null> {
 
 export async function getCharmById(id: string): Promise<Charm | null> {
   try {
-    console.log('🔍 Fetching charm by ID:', id);
     const { data, error } = await supabase
       .from('charms')
       .select('*')
@@ -333,10 +330,9 @@ export async function getCharmById(id: string): Promise<Charm | null> {
       .single();
 
     if (error) throw error;
-    console.log('✅ Charm fetched:', data);
     return data;
   } catch (error) {
-    console.error('❌ Error fetching charm by ID:', error);
+    console.error('Error fetching charm by ID:', error);
     return null;
   }
 }

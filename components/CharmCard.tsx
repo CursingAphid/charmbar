@@ -42,13 +42,11 @@ export default function CharmCard({ charm }: CharmCardProps) {
   // Load background URL asynchronously
   useEffect(() => {
     const loadBackground = async () => {
-      console.log('🖼️ Loading background for charm:', charm.id, 'background_id:', charm.background_id);
       try {
         const url = await getCharmBackgroundUrl(charm);
-        console.log('✅ Background URL loaded:', url);
         setBackgroundUrl(url);
       } catch (error) {
-        console.error('❌ Error loading background for charm:', charm.id, error);
+        console.error('Error loading background for charm:', charm.id, error);
         setBackgroundUrl(null);
       }
     };
