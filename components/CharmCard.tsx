@@ -84,6 +84,11 @@ export default function CharmCard({ charm }: CharmCardProps) {
     }
   };
 
+  const handleFullscreenInteractionChange = (interacting: boolean) => {
+    // In fullscreen mode, we only care about the interaction state for 3D controls
+    setIsInteracting(interacting);
+  };
+
   return (
     <>
       <Card
@@ -274,7 +279,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                           size={1.5}
                           color="#ec4899"
                           spin={true}
-                          onInteractionChange={() => {}}
+                          onInteractionChange={handleFullscreenInteractionChange}
                           cameraZ={4}
                         />
                       </div>
