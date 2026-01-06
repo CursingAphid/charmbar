@@ -26,6 +26,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const [isInteracting, setIsInteracting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const isPointerInsideRef = useRef(false);
   const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen);
 
@@ -37,6 +38,21 @@ export default function CharmCard({ charm }: CharmCardProps) {
       cleanupCharmGlbUrl(charm.id);
     };
   }, [charm.id]);
+
+  // Load background URL asynchronously
+  useEffect(() => {
+    const loadBackground = async () => {
+      try {
+        const url = await getCharmBackgroundUrl(charm);
+        setBackgroundUrl(url);
+      } catch (error) {
+        console.error('Error loading background for charm:', charm.id, error);
+        setBackgroundUrl(null);
+      }
+    };
+
+    loadBackground();
+  }, [charm.id, charm.background_id]);
 
   const selectedInstances = selectedCharms.filter((sc) => sc.charm.id === charm.id);
   const quantity = selectedInstances.length;
@@ -143,8 +159,8 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
         <div
           className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
-          style={getCharmBackgroundUrl(charm) ? {
-            backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
+          style={backgroundUrl ? {
+            backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -244,8 +260,8 @@ export default function CharmCard({ charm }: CharmCardProps) {
                   {/* Charm display */}
                   <div
                     className="relative h-[60vh] flex items-center justify-center p-8"
-                    style={getCharmBackgroundUrl(charm) ? {
-                      backgroundImage: `url(${getCharmBackgroundUrl(charm)})`,
+                    style={backgroundUrl ? {
+                      backgroundImage: `url(${backgroundUrl})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat'

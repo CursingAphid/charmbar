@@ -53,13 +53,14 @@ export interface Charm {
   description: string;
   price: number;
   category: string;
+  background_id?: string; // Reference to background record (new API system)
   image_data?: string; // Base64 encoded image data
   image_filename?: string;
   image_mimetype?: string;
   glb_data?: string; // Base64 encoded GLB data
   glb_filename?: string;
   glb_mimetype?: string;
-  background_data?: string; // Base64 encoded background data
+  background_data?: string; // Base64 encoded background data (legacy)
   background_filename?: string;
   background_mimetype?: string;
   created_at?: string;
@@ -84,14 +85,29 @@ export function getCharmImageUrl(charm: Charm): string {
   return charm.image || '/images/placeholder.png';
 }
 
-export function getCharmBackgroundUrl(charm: Charm): string | null {
+export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
+  // Check if charm has a background_id (new API system)
+  if (charm.background_id) {
+    try {
+      // Use the new API endpoint for background images
+      const response = await fetch(`/api/charms/${charm.id}/background-image`);
+      if (response.ok) {
+        // Return the API endpoint URL for the image
+        return `/api/charms/${charm.id}/background-image`;
+      }
+    } catch (error) {
+      console.error('Error fetching background image:', error);
+    }
+  }
+
+  // Fallback to legacy background data (for backward compatibility)
   if (charm.background_data) {
-    // Create data URL from binary data
     const buffer = bufferFromByteaField(charm.background_data);
     const base64 = buffer.toString('base64');
-    return `data:${charm.background_mimetype};base64,${base64}`;
+    return `data:${charm.background_mimetype || 'image/png'};base64,${base64}`;
   }
-  // Fallback to legacy background path
+
+  // Final fallback to legacy background path
   return charm.background || null;
 }
 
