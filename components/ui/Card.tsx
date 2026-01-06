@@ -19,7 +19,7 @@ export default function Card({
   hover = false 
 }: CardProps) {
   const baseStyles = 'bg-white rounded-xl shadow-md overflow-hidden';
-  const interactiveStyles = onClick || hover ? 'cursor-pointer transition-all duration-300 hover:shadow-xl' : '';
+  const interactiveStyles = onClick || hover ? 'cursor-pointer transition-all duration-300 hover:shadow-lg' : '';
   
   const Component = onClick ? motion.div : 'div';
   const motionProps = onClick ? {
