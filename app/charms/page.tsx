@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBracelets, getCharms, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
+import { getBracelets, getCharms, getCharmsByCategory, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';

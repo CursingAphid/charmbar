@@ -36,6 +36,20 @@ CREATE INDEX IF NOT EXISTS idx_charms_background ON charms(background);
 ALTER TABLE bracelets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE charms ENABLE ROW LEVEL SECURITY;
 
+-- Allow public (anon) read access for the storefront.
+-- Without these SELECT policies, the Supabase JS client will return 0 rows (no error) when using the anon key.
+DROP POLICY IF EXISTS "Public read bracelets" ON bracelets;
+CREATE POLICY "Public read bracelets"
+  ON bracelets
+  FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Public read charms" ON charms;
+CREATE POLICY "Public read charms"
+  ON charms
+  FOR SELECT
+  USING (true);
+
 -- Create policies for public read access
 CREATE POLICY "Allow public read access on bracelets" ON bracelets FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on charms" ON charms FOR SELECT USING (true);
