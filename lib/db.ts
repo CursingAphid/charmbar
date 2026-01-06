@@ -415,7 +415,18 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
       .limit(3);
 
     if (error) throw error;
-    return data || [];
+
+    console.log('🔍 getCharmsWithBackgrounds raw data:', data);
+
+    // Transform data to include tags array
+    const charms: Charm[] = (data || []).map((charm: any) => ({
+      ...charm,
+      tags: charm.charm_tags?.map((ct: any) => ct.tags?.name).filter(Boolean) || []
+    }));
+
+    console.log('🔍 getCharmsWithBackgrounds transformed:', charms.map(c => ({ id: c.id, name: c.name, background_id: c.background_id })));
+
+    return charms;
   } catch (error) {
     console.error('Error fetching charms with backgrounds:', error);
     return [];
