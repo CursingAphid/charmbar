@@ -232,10 +232,10 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    // Include image fields for proper image loading
+    // Include image and GLB fields for proper rendering (removed non-existent 'image' column)
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id, image_data, image_mimetype, image')
+      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
       .order('created_at', { ascending: false })
       .limit(10); // Add limit to prevent large result sets
 
@@ -255,7 +255,7 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
 
     const { data, error } = await supabase
       .from('charms')
-      .select('*')
+      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
       .eq('category', category)
       .order('created_at', { ascending: false });
 
@@ -299,7 +299,7 @@ export async function getCharmById(id: string): Promise<Charm | null> {
   try {
     const { data, error } = await supabase
       .from('charms')
-      .select('*')
+      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
       .eq('id', id)
       .single();
 
@@ -316,7 +316,7 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
     // Simplify query - just get charms that have background_id for now
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select('id, name, description, price, category, background_id, image_data, image_mimetype, glb_data, glb_mimetype')
       .not('background_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(3);
