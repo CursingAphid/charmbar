@@ -46,11 +46,8 @@ function Model({ path, color, spin, isDragging, onLoad }: { path: string; color:
   }, [scene, onLoad]);
 
   useFrame((state) => {
-    if (meshRef.current && (!isDragging && spin)) {
+    if (meshRef.current && spin && !isDragging) {
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
-      // console.log('Model: Spinning', { isDragging, spin });
-    } else {
-      // console.log('Model: Not spinning', { isDragging, spin });
     }
   });
 
@@ -70,12 +67,9 @@ function Icon3D({ iconName, color, spin, isDragging }: { iconName: string; color
   const rotationSpeed = useRef(1);
 
   useFrame((state) => {
-    if (meshRef.current && (!isDragging && spin)) {
+    if (meshRef.current && spin && !isDragging) {
       // Only rotate when not dragging
       meshRef.current.rotation.y = initialRotation.current + state.clock.elapsedTime * rotationSpeed.current * 0.5;
-      // console.log('Icon3D: Spinning', { isDragging, spin });
-    } else {
-      // console.log('Icon3D: Not spinning', { isDragging, spin });
     }
   });
 
@@ -159,15 +153,32 @@ export default function Charm3DIcon({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoaded, setIsLoaded] = useState(!glbPath); // Initialize as loaded if no glbPath (using Icon3D)
-  console.log('Charm3DIcon: Initializing', { glbPath, isLoaded, spin });
-  // Reset camera position when not dragging
-  useEffect(() => {
-    if (!isDragging && controlsRef.current && cameraRef.current) {
+
+  const endDrag = () => {
+    setIsDragging(false);
+    onInteractionChange?.(false);
+
+    // Reset to initial position
+    if (controlsRef.current && cameraRef.current) {
       cameraRef.current.position.set(0, 0, cameraZ);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
-  }, [isDragging, cameraZ]);
+  };
+
+  // Use useEffect to handle global pointer up for when dragging ends outside the element
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalUp = () => {
+        endDrag();
+      };
+
+      window.addEventListener('pointerup', handleGlobalUp);
+      return () => {
+        window.removeEventListener('pointerup', handleGlobalUp);
+      };
+    }
+  }, [isDragging, cameraZ]); // endDrag closes over latest cameraZ
 
   return (
     <div
@@ -192,9 +203,9 @@ export default function Charm3DIcon({
           <pointLight position={[-10, -10, -5]} intensity={0.5} />
           <group scale={size}>
             {glbPath ? (
-              <Model path={glbPath} color={color} spin={!isDragging && spin} isDragging={isDragging} onLoad={() => setIsLoaded(true)} />
+              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} onLoad={() => setIsLoaded(true)} />
             ) : (
-              <Icon3D iconName={iconName} color={color} spin={!isDragging && spin} isDragging={isDragging} />
+              <Icon3D iconName={iconName} color={color} spin={spin} isDragging={isDragging} />
             )}
           </group>
           <OrbitControls
@@ -207,8 +218,7 @@ export default function Charm3DIcon({
               onInteractionChange?.(true);
             }}
             onEnd={() => {
-              setIsDragging(false);
-              onInteractionChange?.(false);
+              endDrag();
             }}
           />
           <Environment preset="sunset" />
