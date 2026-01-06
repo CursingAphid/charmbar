@@ -33,6 +33,7 @@ function SceneCleanup() {
 function Model({ path, color, spin, isDragging, onLoad }: { path: string; color: string; spin: boolean; isDragging: boolean; onLoad?: () => void }) {
   const { scene } = useGLTF(path);
   const meshRef = useRef<THREE.Group>(null);
+  const frozenRotationRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (scene && meshRef.current) {
@@ -46,8 +47,19 @@ function Model({ path, color, spin, isDragging, onLoad }: { path: string; color:
   }, [scene, onLoad]);
 
   useFrame((state) => {
-    if (meshRef.current && spin && !isDragging) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+    if (meshRef.current) {
+      if (spin && !isDragging) {
+        // Continue/update spinning
+        meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+        frozenRotationRef.current = null; // Clear frozen rotation
+      } else if (spin && isDragging) {
+        // Freeze rotation at current position during drag
+        if (frozenRotationRef.current === null) {
+          frozenRotationRef.current = meshRef.current.rotation.y;
+        }
+        meshRef.current.rotation.y = frozenRotationRef.current;
+      }
+      // If not spinning at all, do nothing
     }
   });
 
@@ -65,11 +77,22 @@ function Icon3D({ iconName, color, spin, isDragging }: { iconName: string; color
   const meshRef = useRef<THREE.Group>(null);
   const initialRotation = useRef(0);
   const rotationSpeed = useRef(1);
+  const frozenRotationRef = useRef<number | null>(null);
 
   useFrame((state) => {
-    if (meshRef.current && spin && !isDragging) {
-      // Only rotate when not dragging
-      meshRef.current.rotation.y = initialRotation.current + state.clock.elapsedTime * rotationSpeed.current * 0.5;
+    if (meshRef.current) {
+      if (spin && !isDragging) {
+        // Continue/update spinning
+        meshRef.current.rotation.y = initialRotation.current + state.clock.elapsedTime * rotationSpeed.current * 0.5;
+        frozenRotationRef.current = null; // Clear frozen rotation
+      } else if (spin && isDragging) {
+        // Freeze rotation at current position during drag
+        if (frozenRotationRef.current === null) {
+          frozenRotationRef.current = meshRef.current.rotation.y;
+        }
+        meshRef.current.rotation.y = frozenRotationRef.current;
+      }
+      // If not spinning at all, do nothing
     }
   });
 
