@@ -34,7 +34,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="h-40 sm:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-3 sm:p-4">
         {(charm.glbPath || charm.icon3d) && (isHovered || isInteracting) ? (
           <div className="w-full h-full">
             <Charm3DIcon
@@ -53,20 +53,20 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
               alt={charm.name}
               fill
               className="object-contain"
-              sizes="(max-width: 768px) 100vw, 300px"
+              sizes="(max-width: 768px) 50vw, 300px"
             />
           </div>
         )}
       </div>
 
-      <div className="p-5 text-center">
-        <div className="mb-4">
-          <p className="font-semibold text-lg text-gray-900 mb-1">{charm.name}</p>
-          <p className="text-gray-600">${charm.price.toFixed(2)}</p>
+      <div className="p-3 sm:p-5 text-center">
+        <div className="mb-2 sm:mb-4">
+          <p className="font-semibold text-sm sm:text-lg text-gray-900 mb-0.5 sm:mb-1 truncate">{charm.name}</p>
+          <p className="text-gray-600 text-xs sm:text-base">${charm.price.toFixed(2)}</p>
         </div>
 
         <Button
-          size="md"
+          size="sm"
           fullWidth
           onClick={() => {
             if (isAdded) {
@@ -82,7 +82,7 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
             showToast(`${charm.name} added!`, 'success');
             router.push('/charms');
           }}
-          className="text-sm font-bold"
+          className="text-xs sm:text-sm font-bold py-1.5 sm:py-2"
         >
           {isAdded ? t('home.featured.added') : t('home.featured.add')}
         </Button>
@@ -368,7 +368,7 @@ export default function Home() {
               <Sparkles className="w-6 h-6 text-pink-500" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-8">
               {featuredCharms.map((charm) => (
                 <FeaturedCharmCard
                   key={charm.id}

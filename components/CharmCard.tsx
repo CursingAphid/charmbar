@@ -178,7 +178,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
         )}
 
         <div
-          className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4"
+          className="relative h-40 sm:h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-3 sm:p-4"
           style={backgroundUrl && showBackground ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
@@ -205,26 +205,26 @@ export default function CharmCard({ charm }: CharmCardProps) {
                 fill
                 className="object-contain"
                 style={{ filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))' }}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 loading="lazy"
               />
             </div>
           )}
         </div>
 
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <div className="mb-2">
-            <h3 className="font-semibold text-base text-gray-900 mb-1">{charm.name}</h3>
-            <p className="text-xs text-gray-500 mb-2">{charm.category}</p>
-            <p className="text-sm text-gray-600 line-clamp-2">{charm.description}</p>
+            <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-0.5 sm:mb-1 line-clamp-1">{charm.name}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-2">{charm.category}</p>
+            <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">{charm.description}</p>
           </div>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-lg font-bold text-pink-600">${charm.price.toFixed(2)}</span>
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <span className="text-base sm:text-lg font-bold text-pink-600">${charm.price.toFixed(2)}</span>
             {isSelected && (
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-xs text-pink-600 font-medium"
+                className="text-[10px] sm:text-xs text-pink-600 font-medium"
               >
                 {t('home.featured.added')}
               </motion.span>
@@ -235,6 +235,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
             size="sm" 
             onClick={handleCardClick}
             variant={isSelected ? 'secondary' : 'primary'}
+            className="text-xs sm:text-sm py-1.5 sm:py-2"
           >
             {t('home.featured.add')}
           </Button>

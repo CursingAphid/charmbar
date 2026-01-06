@@ -303,7 +303,7 @@ export default function CharmsPage() {
 
             {/* Charms Grid */}
             {filteredCharms.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
                 {filteredCharms.map((charm, index) => (
                   <motion.div
                     key={charm.id}
