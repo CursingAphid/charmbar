@@ -232,10 +232,10 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    // Simplify query to avoid timeout - just get basic data
+    // Include image fields for proper image loading
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select('id, name, description, price, category, background_id, image_data, image_mimetype, image')
       .order('created_at', { ascending: false })
       .limit(10); // Add limit to prevent large result sets
 
