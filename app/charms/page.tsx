@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBracelets, getCharms, getCharmsByCategory, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
+import { getBracelets, getCharms, getCharmsByTag, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
@@ -35,11 +35,13 @@ export default function CharmsPage() {
       try {
         console.log('📦 Charms page: Loading data from database...');
 
-        const [braceletsData, charmsData, categoriesData] = await Promise.all([
+        const [braceletsData, categoriesData] = await Promise.all([
           getBracelets(),
-          getCharms(),
           getCharmCategories()
         ]);
+
+        // Load all charms initially, we'll filter by tag on the client
+        const charmsData = await getCharms();
         console.log('📦 Charms page: Data loaded -', {
           bracelets: braceletsData.length,
           charms: charmsData.length,
@@ -68,7 +70,7 @@ export default function CharmsPage() {
 
   const filteredCharms = useMemo(() => {
     const filtered = allCharms.filter((charm) => {
-      const matchesCategory = selectedCategory === 'All' || charm.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'All' || (charm.tags && charm.tags.includes(selectedCategory));
       const matchesSearch =
         charm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         charm.description.toLowerCase().includes(searchQuery.toLowerCase());

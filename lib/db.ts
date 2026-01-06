@@ -35,7 +35,8 @@ export interface Charm {
   name: string;
   description: string;
   price: number;
-  category: string;
+  category: string; // For backward compatibility
+  tags?: string[]; // Array of tag names
   background_id?: string; // Reference to background record (new API system)
   image_data?: string; // Base64 encoded image data
   image_filename?: string;
@@ -243,12 +244,26 @@ export async function getCharms(): Promise<Charm[]> {
     // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select(`
+        id, name, description, price, category, background_id,
+        charm_tags (
+          tags (
+            name
+          )
+        )
+      `)
       .order('created_at', { ascending: false })
       .limit(10); // Add limit to prevent large result sets
 
     if (error) throw error;
-    return data || [];
+
+    // Transform data to include tags array
+    const charms: Charm[] = (data || []).map((charm: any) => ({
+      ...charm,
+      tags: charm.charm_tags?.map((ct: any) => ct.tags?.name).filter(Boolean) || []
+    }));
+
+    return charms;
   } catch (error) {
     console.error('Error fetching charms:', error);
     return [];
@@ -263,7 +278,14 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
 
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select(`
+        id, name, description, price, category, background_id,
+        charm_tags (
+          tags (
+            name
+          )
+        )
+      `)
       .eq('category', category)
       .order('created_at', { ascending: false });
 
@@ -278,18 +300,67 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
 export async function getCharmCategories(): Promise<string[]> {
   try {
     const { data, error } = await supabase
-      .from('charms')
-      .select('category')
-      .order('category');
+      .from('tags')
+      .select('name')
+      .order('name');
 
     if (error) throw error;
 
-    // Get unique categories
-    const categories: string[] = Array.from(new Set(data?.map((item: any) => item.category as string).filter(Boolean) || []));
-    return ['All', ...categories];
+    // Get unique tag names
+    const tags: string[] = data?.map((item: any) => item.name as string).filter(Boolean) || [];
+    return ['All', ...tags];
   } catch (error) {
-    console.error('Error fetching charm categories:', error);
+    console.error('Error fetching charm tags:', error);
     return ['All'];
+  }
+}
+
+export async function getCharmsByTag(tagName: string): Promise<Charm[]> {
+  try {
+    if (tagName === 'All') {
+      return getCharms();
+    }
+
+    // First get the tag ID
+    const { data: tagData, error: tagError } = await supabase
+      .from('tags')
+      .select('id')
+      .eq('name', tagName)
+      .single();
+
+    if (tagError || !tagData) {
+      console.error('Tag not found:', tagName);
+      return [];
+    }
+
+    // IMPORTANT: Do NOT select BYTEA blobs (image_data/glb_data) here.
+    // They can be huge and cause PostgREST statement timeouts.
+    // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
+    const { data, error } = await supabase
+      .from('charm_tags')
+      .select(`
+        charms (
+          id, name, description, price, background_id
+        )
+      `)
+      .eq('tag_id', tagData.id);
+
+    if (error) throw error;
+
+    // Transform the data to match Charm interface
+    const charms: Charm[] = data?.map((item: any) => ({
+      id: item.charms?.id,
+      name: item.charms?.name,
+      description: item.charms?.description,
+      price: item.charms?.price,
+      background_id: item.charms?.background_id,
+      category: tagName, // For backward compatibility in filtering
+    })) || [];
+
+    return charms;
+  } catch (error) {
+    console.error('Error fetching charms by tag:', error);
+    return [];
   }
 }
 
@@ -307,7 +378,14 @@ export async function getCharmById(id: string): Promise<Charm | null> {
   try {
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select(`
+        id, name, description, price, category, background_id,
+        charm_tags (
+          tags (
+            name
+          )
+        )
+      `)
       .eq('id', id)
       .single();
 
@@ -324,7 +402,14 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
     // Simplify query - just get charms that have background_id for now
     const { data, error } = await supabase
       .from('charms')
-      .select('id, name, description, price, category, background_id')
+      .select(`
+        id, name, description, price, category, background_id,
+        charm_tags (
+          tags (
+            name
+          )
+        )
+      `)
       .not('background_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(3);
