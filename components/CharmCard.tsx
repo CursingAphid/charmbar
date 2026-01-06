@@ -24,9 +24,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const reorderCharms = useStore((state) => state.reorderCharms);
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
-  const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const isPointerInsideRef = useRef(false);
   const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen);
 
   useEffect(() => {
@@ -38,15 +38,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
       // #region agent log
       fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'A',location:'components/CharmCard.tsx:unmount',message:'CharmCard unmounted',data:{charmId:charm.id},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
-    };
-  }, []);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (interactionTimeoutRef.current) {
-        clearTimeout(interactionTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -79,47 +70,14 @@ export default function CharmCard({ charm }: CharmCardProps) {
     showToast(`${charm.name} removed`, 'success');
   };
 
-  const handleMouseLeave = () => {
-    // Clear any existing timeout
-    if (interactionTimeoutRef.current) {
-      clearTimeout(interactionTimeoutRef.current);
-      interactionTimeoutRef.current = null;
-    }
-
-    // If not interacting, hide immediately
-    if (!isInteracting) {
-      setIsHovered(false);
-      return;
-    }
-
-    // If interacting, delay hiding to prevent flickering when dragging outside
-    const timeout = setTimeout(() => {
-      setIsHovered(false);
-      interactionTimeoutRef.current = null;
-    }, 150); // Small delay to prevent flickering
-
-    interactionTimeoutRef.current = timeout;
-  };
-
   const handleInteractionChange = (interacting: boolean) => {
     setIsInteracting(interacting);
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'C',location:'components/CharmCard.tsx:interaction',message:'Interaction change',data:{charmId:charm.id,interacting,isHovered,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
-
-    // If interaction starts, clear any pending timeout
-    if (interacting && interactionTimeoutRef.current) {
-      clearTimeout(interactionTimeoutRef.current);
-      interactionTimeoutRef.current = null;
-    }
-
-    // If interaction ends, hide after a delay to prevent flickering
-    if (!interacting) {
-      const timeout = setTimeout(() => {
-        setIsHovered(false);
-        interactionTimeoutRef.current = null;
-      }, 100);
-      interactionTimeoutRef.current = timeout;
+    // IMPORTANT: avoid state churn while dragging. When drag ends, sync hover once based on pointer location.
+    if (!interacting && !isFullscreen) {
+      setIsHovered(isPointerInsideRef.current);
     }
   };
 
@@ -128,12 +86,9 @@ export default function CharmCard({ charm }: CharmCardProps) {
       <Card
         onMouseEnter={() => {
           if (!isFullscreen) {
-            // Clear any pending timeout
-            if (interactionTimeoutRef.current) {
-              clearTimeout(interactionTimeoutRef.current);
-              interactionTimeoutRef.current = null;
-            }
-            setIsHovered(true);
+            isPointerInsideRef.current = true;
+            // While dragging, don't update hover state (prevents re-renders that can stutter the canvas)
+            if (!isInteracting) setIsHovered(true);
             // #region agent log
             fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseenter',message:'Mouse enter',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
             // #endregion
@@ -143,7 +98,11 @@ export default function CharmCard({ charm }: CharmCardProps) {
           // #region agent log
           fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'B',location:'components/CharmCard.tsx:mouseleave',message:'Mouse leave',data:{charmId:charm.id,isInteracting,isFullscreen},timestamp:Date.now()})}).catch(()=>{});
           // #endregion
-          if (!isFullscreen) handleMouseLeave();
+          if (!isFullscreen) {
+            isPointerInsideRef.current = false;
+            // While dragging, don't update hover state (prevents re-renders that can stutter the canvas)
+            if (!isInteracting) setIsHovered(false);
+          }
         }}
         hover
         className={`relative overflow-hidden transition-all duration-300 ${
