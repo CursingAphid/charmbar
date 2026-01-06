@@ -12,10 +12,6 @@ export async function GET(
   const resolvedParams = await Promise.resolve(params as any);
   const charmId = resolvedParams?.id as string | undefined;
 
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'B',location:'app/api/charm-glb/[id]/route.ts:GET',message:'charm-glb requested',data:{charmId:charmId??null},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   if (!supabaseUrl || !supabaseKey) {
     return NextResponse.json({ error: 'Supabase env not configured' }, { status: 500 });
   }

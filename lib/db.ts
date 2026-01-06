@@ -238,10 +238,6 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    const t0 = Date.now();
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:start',message:'getCharms start',data:{select:'id,name,description,price,category,background_id',limit:10},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     // IMPORTANT: Do NOT select BYTEA blobs (image_data/glb_data) here.
     // They can be huge and cause PostgREST statement timeouts.
     // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
@@ -252,15 +248,9 @@ export async function getCharms(): Promise<Charm[]> {
       .limit(10); // Add limit to prevent large result sets
 
     if (error) throw error;
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:ok',message:'getCharms ok',data:{ms:Date.now()-t0,count:(data||[]).length},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return data || [];
   } catch (error) {
     console.error('Error fetching charms:', error);
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run-images-1',hypothesisId:'C',location:'lib/db.ts:getCharms:err',message:'getCharms error',data:{name:(error as any)?.name??null,code:(error as any)?.code??null,message:(error as any)?.message??null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return [];
   }
 }
