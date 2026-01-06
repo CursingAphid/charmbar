@@ -198,22 +198,18 @@ export default function CharmsPage() {
               {/* Background Toggle & Category Filters */}
               <div className="flex items-center justify-between">
                 {/* Background Toggle */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={toggleCharmBackgrounds}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                      showCharmBackgrounds
-                        ? 'bg-pink-50 border-pink-200 text-pink-600'
-                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                    }`}
-                    title={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
-                  >
-                    <Image className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  onClick={toggleCharmBackgrounds}
+                  className={`p-2 rounded-lg border transition-all duration-200 ${
+                    showCharmBackgrounds
+                      ? 'bg-pink-500 border-pink-500 text-white shadow-sm'
+                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                  title={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                  aria-label={showCharmBackgrounds ? t('charms.backgroundsOn') : t('charms.backgroundsOff')}
+                >
+                  <Image className="w-4 h-4" />
+                </button>
 
                 {/* Category Filters */}
                 <div className="flex flex-wrap gap-2">
