@@ -43,10 +43,26 @@ CREATE TABLE IF NOT EXISTS backgrounds (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Create tags table
+CREATE TABLE IF NOT EXISTS tags (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create charm_tags junction table for many-to-many relationship
+CREATE TABLE IF NOT EXISTS charm_tags (
+  charm_id TEXT NOT NULL REFERENCES charms(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (charm_id, tag_id)
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE bracelets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE charms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE backgrounds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE charm_tags ENABLE ROW LEVEL SECURITY;
 
 -- Allow public (anon) read access for the storefront.
 -- Without these SELECT policies, the Supabase JS client will return 0 rows (no error) when using the anon key.

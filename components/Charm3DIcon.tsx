@@ -35,13 +35,11 @@ function Model({ path, color, spin, isDragging, onLoad }: { path: string; color:
   const meshRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
-    if (scene) {
-      // Center the model
+    if (scene && meshRef.current) {
+      // Center the model by adjusting the mesh position instead of modifying scene
       const box = new THREE.Box3().setFromObject(scene);
       const center = box.getCenter(new THREE.Vector3());
-      scene.position.x += (scene.position.x - center.x);
-      scene.position.y += (scene.position.y - center.y);
-      scene.position.z += (scene.position.z - center.z);
+      meshRef.current.position.set(-center.x, -center.y, -center.z);
       // Call onLoad when the model is ready
       onLoad?.();
     }
@@ -154,14 +152,7 @@ export default function Charm3DIcon({
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    // If using Icon3D (no glbPath), consider it loaded immediately
-    if (!glbPath) {
-      setIsLoaded(true);
-    }
-  }, [glbPath]);
+  const [isLoaded, setIsLoaded] = useState(!glbPath); // Initialize as loaded if no glbPath (using Icon3D)
 
   // Use useEffect to handle global pointer up for when dragging ends outside the element
   useEffect(() => {

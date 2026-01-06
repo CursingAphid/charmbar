@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await Promise.resolve(params as any);
+    const resolvedParams = await params;
     const id = resolvedParams?.id;
     const background = await getBackgroundById(id);
 

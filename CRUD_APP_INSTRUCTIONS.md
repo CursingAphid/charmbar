@@ -218,3 +218,4 @@ Use the Supabase JavaScript client library: `@supabase/supabase-js`
 
 Good luck building the CRUD app! 🚀
 
+

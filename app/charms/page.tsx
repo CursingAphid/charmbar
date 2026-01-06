@@ -74,7 +74,7 @@ export default function CharmsPage() {
     const filtered = allCharms.filter((charm) => {
       const hasTags = charm.tags && charm.tags.length > 0;
       const matchesCategory = selectedCategory === 'All' ||
-        (hasTags && charm.tags.includes(selectedCategory)) ||
+        (hasTags && charm.tags!.includes(selectedCategory)) ||
         (!hasTags && charm.category === selectedCategory); // fallback for charms without tags
 
       const matchesSearch =

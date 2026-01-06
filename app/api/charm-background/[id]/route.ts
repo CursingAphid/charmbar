@@ -6,7 +6,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
-  const resolvedParams = await Promise.resolve(params as any);
+  const resolvedParams = await params;
   const charmId = resolvedParams?.id;
 
   try {

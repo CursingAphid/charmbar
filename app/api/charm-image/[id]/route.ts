@@ -9,8 +9,8 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
-  const resolvedParams = await Promise.resolve(params as any);
-  const charmId = resolvedParams?.id as string | undefined;
+  const resolvedParams = await params;
+  const charmId = resolvedParams?.id;
 
   if (!supabaseUrl || !supabaseKey) {
     return NextResponse.json({ error: 'Supabase env not configured' }, { status: 500 });

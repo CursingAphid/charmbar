@@ -18,3 +18,4 @@ export function bufferFromByteaField(value: string): Buffer {
   return Buffer.from(value, 'base64');
 }
 
+

@@ -16,7 +16,7 @@ export default function PreviewCanvas() {
   const reorderCharms = useStore((state) => state.reorderCharms);
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted] = useState(true); // Components are mounted when they render
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -28,10 +28,6 @@ export default function PreviewCanvas() {
   const handleToggleExpanded = () => {
     setIsExpanded((prev) => !prev);
   };
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Prevent background scrolling while expanded
   useEffect(() => {

@@ -26,14 +26,12 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted] = useState(true); // Components are mounted when they render
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const isPointerInsideRef = useRef(false);
   const show3d = Boolean(getCharmGlbUrl(charm)) && (isHovered || isInteracting || isFullscreen);
 
   useEffect(() => {
-    setIsMounted(true);
-
     // Cleanup blob URLs on unmount to prevent memory leaks
     return () => {
       cleanupCharmGlbUrl(charm.id);
@@ -185,10 +183,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                 alt={charm.name}
                 fill
                 className="object-contain"
-                style={{
-                  filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))',
-                  objectPosition: 'center 60%' // Position content lower in the container to center non-transparent parts
-                }}
+                style={{ filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))' }}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 loading="lazy"
               />
