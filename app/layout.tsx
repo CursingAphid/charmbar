@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { OrientationHandler } from "@/components/OrientationHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "charmbazaar - Custom Charm Bracelets",
   description: "Create your perfect charm bracelet. Choose a bracelet and add your favorite charms!",
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -46,6 +54,7 @@ export default function RootLayout({
         <div className="relative z-10">
           <LanguageProvider>
             <ToastProvider>
+              <OrientationHandler />
         {children}
             </ToastProvider>
           </LanguageProvider>

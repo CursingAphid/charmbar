@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Bracelet, Charm } from '@/lib/db';
 
 // Default bracelet - will be replaced with database-driven bracelet selection
@@ -44,7 +45,9 @@ interface StoreState {
   hasSelectedBracelet: () => boolean;
 }
 
-export const useStore = create<StoreState>((set, get) => ({
+export const useStore = create<StoreState>()(
+  persist(
+    (set, get) => ({
   selectedBracelet: null, // No default bracelet - must be selected from database
   selectedCharms: [],
   cart: [],
@@ -128,5 +131,41 @@ export const useStore = create<StoreState>((set, get) => ({
       return total + braceletPrice + charmsPrice;
     }, 0);
   },
-}));
+}),
+    {
+      name: 'charm-selection-storage',
+      storage: createJSONStorage(() => {
+        // Use cookies for persistence on client, fallback to localStorage for SSR
+        if (typeof window !== 'undefined') {
+          return {
+            getItem: (name: string) => {
+              const value = document.cookie
+                .split('; ')
+                .find(row => row.startsWith(name + '='))
+                ?.split('=')[1];
+              return value ? JSON.parse(decodeURIComponent(value)) : null;
+            },
+            setItem: (name: string, value: string) => {
+              document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+            },
+            removeItem: (name: string) => {
+              document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+            },
+          };
+        }
+        // Fallback for SSR - use a no-op storage
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        };
+      }),
+      // Only persist the charm selection state, not the cart
+      partialize: (state) => ({
+        selectedBracelet: state.selectedBracelet,
+        selectedCharms: state.selectedCharms,
+      }),
+    }
+  )
+);
 
