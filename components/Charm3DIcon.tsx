@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -14,6 +14,8 @@ interface Charm3DIconProps {
   color?: string;
   spin?: boolean;
   onInteractionChange?: (isInteracting: boolean) => void;
+  onError?: () => void;
+  onLoad?: () => void;
   cameraZ?: number;
 }
 
@@ -30,7 +32,8 @@ function SceneCleanup() {
 }
 
 // Model component for GLB files
-function Model({ path, color, spin, isDragging, onLoad }: { path: string; color: string; spin: boolean; isDragging: boolean; onLoad?: () => void }) {
+function Model({ path, color, spin, isDragging, onLoad, onError }: { path: string; color: string; spin: boolean; isDragging: boolean; onLoad?: () => void; onError?: () => void }) {
+  // NOTE: In @react-three/drei v10, real GLTF loader errors are thrown (and should be caught by an ErrorBoundary).
   const { scene } = useGLTF(path);
   const groupRef = useRef<THREE.Group>(null);
   const frozenRotationRef = useRef<number | null>(null);
@@ -81,11 +84,24 @@ function Model({ path, color, spin, isDragging, onLoad }: { path: string; color:
   );
 }
 
-// Preload common GLB models
-useGLTF.preload('/images/charms/heart_with_wings.glb');
-useGLTF.preload('/images/charms/tree_in_circle.glb');
-useGLTF.preload('/images/charms/half_moon.glb');
-useGLTF.preload('/images/charms/golden_ripple_charm.glb');
+class GLTFErrorBoundary extends React.Component<
+  { path: string; onError?: () => void; children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: unknown) {
+    this.props.onError?.();
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+// GLB models are now loaded on-demand from the database, no preloading needed
 
 // Simple 3D icon component using basic geometries
 function Icon3D({ iconName, color, spin, isDragging }: { iconName: string; color: string; spin: boolean; isDragging: boolean }) {
@@ -185,6 +201,8 @@ export default function Charm3DIcon({
   color = '#ec4899',
   spin = false,
   onInteractionChange,
+  onError,
+  onLoad,
   cameraZ = 3
 }: Charm3DIconProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -235,6 +253,7 @@ export default function Charm3DIcon({
   return (
     <div
       className="w-full h-full relative"
+      style={{ pointerEvents: 'auto' }}
     >
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -244,6 +263,7 @@ export default function Charm3DIcon({
       <Canvas
         camera={{ position: [0, 0, cameraZ], fov: 50 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
+        style={{ pointerEvents: 'auto' }}
         onCreated={({ camera }) => {
           cameraRef.current = camera as THREE.PerspectiveCamera;
         }}
@@ -255,7 +275,19 @@ export default function Charm3DIcon({
           <pointLight position={[-10, -10, -5]} intensity={0.5} />
           <group scale={size}>
             {glbPath ? (
-              <Model path={glbPath} color={color} spin={spin} isDragging={isDragging} onLoad={handleModelLoaded} />
+              <GLTFErrorBoundary path={glbPath} onError={onError}>
+                <Model
+                  path={glbPath}
+                  color={color}
+                  spin={spin}
+                  isDragging={isDragging}
+                  onLoad={() => {
+                    handleModelLoaded();
+                    onLoad?.();
+                  }}
+                  onError={onError}
+                />
+              </GLTFErrorBoundary>
             ) : (
               <Icon3D iconName={iconName} color={color} spin={spin} isDragging={isDragging} />
             )}
@@ -264,6 +296,7 @@ export default function Charm3DIcon({
             ref={controlsRef}
             enableZoom={false}
             enablePan={false}
+            enableRotate={true}
             autoRotate={false}
             onStart={() => {
               setIsDragging(true);

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Bracelet } from '@/data/products';
+import { Bracelet } from '@/lib/db';
 import Card from './ui/Card';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';

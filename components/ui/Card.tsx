@@ -11,12 +11,12 @@ interface CardProps {
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(function Card({
-  children,
-  className = '',
-  onClick,
+  children, 
+  className = '', 
+  onClick, 
   onMouseEnter,
   onMouseLeave,
-  hover = false
+  hover = false 
 }, ref) {
   const baseStyles = 'bg-white rounded-xl shadow-md overflow-hidden';
   // Keep hover stable (no shadow/transform changes) to avoid any perceived "movement"

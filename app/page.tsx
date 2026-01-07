@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { getCharmsWithBackgrounds, type Charm } from '@/data/products';
+import { getCharmsWithBackgrounds, type Charm } from '@/lib/db';
 import { getCharmImageUrl } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,11 +15,11 @@ import { Sparkles, MousePointerClick, ShoppingBag, Truck, CheckCircle } from 'lu
 import Charm3DIcon from '@/components/Charm3DIcon';
 import { useToast } from '@/components/ToastProvider';
 
-function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: {
-  charm: any;
-  selectedCharms: any[];
-  addCharm: (c: any) => void;
-  t: any;
+function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: { 
+  charm: any; 
+  selectedCharms: any[]; 
+  addCharm: (c: any) => void; 
+  t: any; 
   showToast: any;
   router: any;
 }) {
@@ -65,9 +65,9 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
   }, [isHovered, isInteracting]);
 
   return (
-    <Card
+    <Card 
       ref={cardRef}
-      key={charm.id}
+      key={charm.id} 
       className="border border-pink-100 bg-white shadow-sm hover:shadow-md transition-shadow"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

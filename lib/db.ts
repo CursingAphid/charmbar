@@ -66,10 +66,7 @@ export function getCharmImageUrl(charm: Charm): string {
     return `data:${charm.image_mimetype};base64,${base64}`;
   }
   // Prefer on-demand API fetch to avoid loading BYTEA blobs in list queries
-  if (typeof window !== 'undefined') {
-    return `/api/charm-image/${charm.id}`;
-  }
-  return '/images/placeholder.png';
+  return `/api/charm-image/${charm.id}`;
 }
 
 export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
@@ -88,23 +85,8 @@ export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null
     return `data:${charm.background_mimetype || 'image/png'};base64,${base64}`;
   }
 
-  // Final fallback to legacy background path
-  return charm.background || null;
+  return null;
 }
-
-// Map charm IDs to local GLB files for hover effect
-const getLocalGlbPath = (charmId: string): string | undefined => {
-  const glbMappings: Record<string, string> = {
-    'charm-1': '/images/charms/golden_ripple_charm.glb', // seashell1 -> golden ripple
-    'charm-2': '/images/charms/half_moon.glb', // snowflake -> half moon
-    'charm-3': '/images/charms/heart_with_wings.glb', // mother daughter heart -> heart with wings
-    'charm-4': '/images/charms/tree_in_circle.glb', // tree in heart -> tree in circle
-    'charm-5': '/images/charms/golden_ripple_charm.glb', // golden ripple -> golden ripple
-    'charm-6': '/images/charms/tree_in_circle.glb', // tree in circle -> tree in circle
-    'charm-7': '/images/charms/half_moon.glb', // half moon -> half moon
-  };
-  return glbMappings[charmId];
-};
 
 // Cache for GLB blob URLs to avoid repeated conversions
 const glbCache = new Map<string, string>();
@@ -135,8 +117,7 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
       return `data:${mimeType};base64,${base64}`;
     } catch (error) {
       console.error('Error converting GLB data for charm:', charm.id, error);
-      // Fallback to local file
-      return getLocalGlbPath(charm.id);
+      return undefined;
     }
   }
 
@@ -144,7 +125,7 @@ export function getCharmGlbUrl(charm: Charm): string | undefined {
   if (typeof window !== 'undefined') {
     return `/api/charm-glb/${charm.id}`;
   }
-  return getLocalGlbPath(charm.id);
+  return undefined;
 }
 
 // Function to clean up blob URLs when component unmounts
@@ -228,9 +209,13 @@ export function downloadCharmGlb(charm: Charm): void {
 // Database functions
 export async function getBracelets(): Promise<Bracelet[]> {
   try {
-    // For now, return empty array since we're focusing on charms
-    // TODO: Implement bracelet API endpoints if needed
-    return [];
+    const { data, error } = await supabase
+      .from('bracelets')
+      .select('*')
+      .order('price', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error('Error fetching bracelets:', error);
     return [];

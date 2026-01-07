@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { Charm } from '@/data/products';
+import dynamic from 'next/dynamic';
+import { Charm } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,8 +12,13 @@ import { X, Maximize2, Image as ImageIcon, Plus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
-import Charm3DIcon from './Charm3DIcon';
 import { getCharmImageUrl, getCharmBackgroundUrl, getCharmGlbUrl, cleanupCharmGlbUrl } from '@/lib/db';
+import AutoCenteredImage from './AutoCenteredImage';
+
+// Load the 3D renderer only when needed (keeps initial page load snappy)
+const Charm3DIcon = dynamic(() => import('./Charm3DIcon'), {
+  ssr: false,
+});
 
 interface CharmCardProps {
   charm: Charm;
@@ -29,13 +35,23 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [showBackground, setShowBackground] = useState(true); // Per-card background toggle
   const [isVisible, setIsVisible] = useState(true); // Track if card is visible on screen
+  const [glbLoadError, setGlbLoadError] = useState(false); // Track if 3D model failed to load
+  const [shouldLoad3D, setShouldLoad3D] = useState(false); // Lazy-load 3D only after user intent
+  const [is3DLoaded, setIs3DLoaded] = useState(false); // Track if 3D model has finished loading
   const isPointerInsideRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const glbUrl = useMemo(() => getCharmGlbUrl(charm), [charm.id]);
 
   useEffect(() => {
-    // Cleanup blob URLs on unmount to prevent memory leaks
+    // Cleanup blob URLs and timeouts on unmount to prevent memory leaks
     return () => {
       cleanupCharmGlbUrl(charm.id);
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
     };
   }, [charm.id]);
 
@@ -75,6 +91,11 @@ export default function CharmCard({ charm }: CharmCardProps) {
           if (!isIntersecting && isHovered && !isInteracting && !isFullscreen) {
             setIsHovered(false);
             isPointerInsideRef.current = false;
+          }
+
+          // On mobile, unload 3D when offscreen to save resources (reset back to 2D)
+          if (!isIntersecting) {
+            setShouldLoad3D(false);
           }
         });
       },
@@ -127,10 +148,57 @@ export default function CharmCard({ charm }: CharmCardProps) {
     }
   };
 
+  const handleGlbError = () => {
+    console.warn('3D model failed to load for charm:', charm.id, '- falling back to 2D image');
+    setGlbLoadError(true);
+    setIs3DLoaded(false);
+    setShouldLoad3D(false); // Reset to prevent continuous loading attempts
+    // Clear the timeout
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  };
+
+  const handle3DLoaded = () => {
+    setIs3DLoaded(true);
+    // Clear the timeout since loading succeeded
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  };
+
+  // Auto-centered images now compute their own object-position from non-transparent pixels.
+
+  const handleCardClickForFullscreen = () => {
+    setIsFullscreen(true);
+    setIsHovered(false);
+    setIsInteracting(false);
+    // Reset GLB error state when opening fullscreen, allowing retry
+    if (glbLoadError) {
+      setGlbLoadError(false);
+      setIs3DLoaded(false);
+    }
+    // Load 3D when opening fullscreen
+    if (!shouldLoad3D) {
+      setShouldLoad3D(true);
+      setIs3DLoaded(false); // Reset loaded state when starting to load
+      // Set a timeout to prevent infinite loading
+      loadTimeoutRef.current = setTimeout(() => {
+        console.warn('3D model load timeout for charm:', charm.id, '- falling back to 2D image');
+        setGlbLoadError(true);
+        setIs3DLoaded(false);
+        setShouldLoad3D(false);
+      }, 30000); // 30 second timeout
+    }
+  };
+
   return (
     <>
       <Card
         ref={cardRef}
+        onClick={handleCardClickForFullscreen}
         onMouseEnter={() => {
           if (!isFullscreen) {
             isPointerInsideRef.current = true;
@@ -143,10 +211,18 @@ export default function CharmCard({ charm }: CharmCardProps) {
             isPointerInsideRef.current = false;
             // While dragging, don't update hover state (prevents re-renders that can stutter the canvas)
             if (!isInteracting) setIsHovered(false);
+            // Clear load timeout if user leaves before model loads
+            if (loadTimeoutRef.current && !is3DLoaded) {
+              clearTimeout(loadTimeoutRef.current);
+              loadTimeoutRef.current = null;
+              // Reset loading state
+              setShouldLoad3D(false);
+              setIs3DLoaded(false);
+            }
           }
         }}
         hover
-        className={`relative overflow-hidden transition-all duration-300 ${
+        className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
           isSelected
             ? 'ring-2 ring-black ring-offset-2 bg-gray-50/50'
             : ''
@@ -160,12 +236,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFullscreen(true);
-              setIsHovered(false);
-              setIsInteracting(false);
-            }}
+            onClick={(e) => e.stopPropagation()}
             className="bg-white/90 hover:bg-white text-gray-700 rounded-full p-1.5 shadow-lg transition-colors"
             aria-label="View charm in fullscreen"
           >
@@ -208,10 +279,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
                 e.stopPropagation();
                 handleCardClick();
               }}
-              className="bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] text-gray-900 ring-1 ring-black/10 rounded-full px-2.5 py-1.5 shadow-sm transition-colors text-xs font-medium"
+              className="bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] text-gray-900 ring-1 ring-black/10 rounded-full w-10 h-10 flex items-center justify-center shrink-0 shadow-lg transition-colors font-medium"
               aria-label="Add charm"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
             </motion.button>
           )}
 
@@ -223,11 +294,14 @@ export default function CharmCard({ charm }: CharmCardProps) {
               exit={{ scale: 0, opacity: 0 }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={handleRemove}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-full px-2.5 py-1.5 shadow-lg transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemove(e);
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0 shadow-lg transition-colors"
               aria-label="Remove charm"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </motion.button>
           )}
         </div>
@@ -252,29 +326,19 @@ export default function CharmCard({ charm }: CharmCardProps) {
             backgroundRepeat: 'no-repeat'
           } : undefined}
         >
-          {getCharmGlbUrl(charm) ? (
-            <div className={`w-full h-full ${isHovered || isInteracting || isFullscreen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
-              <Charm3DIcon
-                iconName={charm.icon3d}
-                glbPath={getCharmGlbUrl(charm)}
-                size={1.2}
-                color="#ec4899"
-                spin={true}
-                onInteractionChange={handleInteractionChange}
-              />
-            </div>
-          ) : null}
-          <div className={`absolute inset-0 flex items-center justify-center ${getCharmGlbUrl(charm) && (isHovered || isInteracting || isFullscreen) ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
-            <Image
-              src={getCharmImageUrl(charm)}
-              alt={charm.name}
-              fill
-              className="object-contain"
-              style={{ filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))' }}
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              loading="lazy"
-            />
-          </div>
+          {/* Always show 2D image in card view */}
+          <AutoCenteredImage
+            src={getCharmImageUrl(charm)}
+            alt={charm.name}
+            fill
+            className="object-contain"
+            style={{
+              filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6))',
+            }}
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            loading="lazy"
+            fallbackTransform="translate(0px, 0px)"
+          />
         </div>
 
         <div className="p-3 sm:p-4">
@@ -402,29 +466,63 @@ export default function CharmCard({ charm }: CharmCardProps) {
                     } : { background: 'linear-gradient(to-br, #f8fafc, #e2e8f0)' }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {getCharmGlbUrl(charm) ? (
-                      <div className="w-full h-full">
-                        <Charm3DIcon
-                          glbPath={getCharmGlbUrl(charm)}
-                          size={1.5}
-                          color="#ec4899"
-                          spin={true}
-                          onInteractionChange={() => {}}
-                          cameraZ={4}
-                        />
-                      </div>
-                    ) : (
-                      <div className="relative w-full h-full flex items-center justify-center">
-                        <Image
-                          src={getCharmImageUrl(charm)}
-                          alt={charm.name}
-                          fill
-                          className="object-contain"
-                          style={{ filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7))' }}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    )}
+                    <div className="relative w-full h-full">
+                      {glbUrl && !glbLoadError ? (
+                        <>
+                          {/* 3D Model - mount immediately in fullscreen so it can actually load */}
+                          {shouldLoad3D ? (
+                            <div className={`w-full h-full ${is3DLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
+                              <Charm3DIcon
+                                glbPath={glbUrl}
+                                size={1.5}
+                                color="#ec4899"
+                                spin={true}
+                                onInteractionChange={() => {}}
+                                onError={handleGlbError}
+                                onLoad={handle3DLoaded}
+                                cameraZ={4}
+                              />
+                            </div>
+                          ) : null}
+
+                          {/* 2D Image - show when 3D is loading */}
+                          <div className={`absolute inset-0 flex items-center justify-center ${is3DLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}>
+                            <AutoCenteredImage
+                              src={getCharmImageUrl(charm)}
+                              alt={charm.name}
+                              fill
+                              className="object-contain"
+                              style={{
+                                filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7))',
+                              }}
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              fallbackTransform="translate(0px, 0px)"
+                            />
+                          </div>
+
+                          {/* Loading spinner for 3D */}
+                          {shouldLoad3D && !is3DLoaded ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <AutoCenteredImage
+                            src={getCharmImageUrl(charm)}
+                            alt={charm.name}
+                            fill
+                            className="object-contain"
+                            style={{
+                              filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7))',
+                            }}
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            fallbackTransform="translate(0px, 0px)"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Charm info */}

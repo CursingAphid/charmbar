@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { Bracelet, Charm } from '@/lib/db';
 
-// Default bracelet - hardcoded for synchronous access
+// Default bracelet - will be replaced with database-driven bracelet selection
+// For now keeping minimal data structure until bracelet selection is implemented
 const defaultBracelet: Bracelet = {
   id: 'bracelet-2',
   name: 'Gold Plated Chain',
   description: 'Luxurious gold-plated chain with timeless appeal',
   price: 34.99,
-  image: '/images/bracelets/bracelet_gold.png',
-  openImage: '/images/bracelets/bracelet_open.png',
+  image: '', // Will be loaded from database API
+  openImage: '', // Will be loaded from database API
   grayscale: false,
   color: 'Gold',
   material: 'Gold Plated'
@@ -40,10 +41,11 @@ interface StoreState {
   clearSelection: () => void;
   getTotalPrice: () => number;
   getCartTotal: () => number;
+  hasSelectedBracelet: () => boolean;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
-  selectedBracelet: defaultBracelet,
+  selectedBracelet: null, // No default bracelet - must be selected from database
   selectedCharms: [],
   cart: [],
 
@@ -95,19 +97,23 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   clearSelection: () => {
-    set({ selectedBracelet: defaultBracelet, selectedCharms: [] });
+    set({ selectedBracelet: null, selectedCharms: [] });
+  },
+
+  hasSelectedBracelet: () => {
+    return get().selectedBracelet !== null;
   },
 
   getTotalPrice: () => {
     const { selectedBracelet, selectedCharms } = get();
     if (!selectedBracelet) return 0;
-    
+
     const braceletPrice = selectedBracelet.price;
     const charmsPrice = selectedCharms.reduce(
       (total, sc) => total + sc.charm.price,
       0
     );
-    
+
     return braceletPrice + charmsPrice;
   },
 

@@ -12,6 +12,8 @@ import Button from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingBag, X, ChevronDown, Info, Image, Eye, Filter, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
+import { getCharmGlbUrl } from '@/lib/db';
+import { useGLTF } from '@react-three/drei';
 
 export default function CharmsPage() {
   const router = useRouter();
@@ -62,14 +64,32 @@ export default function CharmsPage() {
     loadData();
   }, []);
 
+  // Note: Removed preloading to avoid overwhelming the server with requests for charms that don't have GLB data
+  // 3D models will load on-demand when users hover over charms
+
   // Ensure a bracelet is always selected (defensive; store defaults to gold)
   // This hook must come before any conditional returns to maintain hooks order
   useEffect(() => {
-    if (!selectedBracelet && bracelets.length > 0) {
-      const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
-      if (gold) setBracelet(gold);
+    if (!selectedBracelet) {
+      if (bracelets.length > 0) {
+        const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
+        if (gold) setBracelet(gold);
+      } else if (!loading) {
+        // Fallback if no bracelets in database to prevent being stuck on loading screen
+        setBracelet({
+          id: 'default-bracelet',
+          name: 'Gold Plated Chain',
+          description: 'Luxurious gold-plated chain',
+          price: 34.99,
+          image: '/images/bracelets/bracelet_gold.png',
+          openImage: '/images/bracelets/bracelet_open.png',
+          grayscale: false,
+          color: 'Gold',
+          material: 'Gold Plated'
+        });
+      }
     }
-  }, [selectedBracelet, setBracelet, bracelets]);
+  }, [selectedBracelet, setBracelet, bracelets, loading]);
 
   // Prevent background scroll when mobile preview is open
   useEffect(() => {
@@ -462,7 +482,7 @@ export default function CharmsPage() {
               </div>
 
               <div className="px-4 pb-4">
-                <div className="h-[55vh]">
+                <div className="w-full">
                   <PreviewCanvas />
                 </div>
               </div>

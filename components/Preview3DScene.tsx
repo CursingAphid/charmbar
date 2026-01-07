@@ -4,7 +4,7 @@ import { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import * as THREE from 'three';
-import { Charm } from '@/data/products';
+import { Charm } from '@/lib/db';
 
 interface Preview3DSceneProps {
   selectedCharms: Array<{ charm: Charm; quantity: number }>;
