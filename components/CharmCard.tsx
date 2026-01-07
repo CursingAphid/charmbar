@@ -116,7 +116,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const quantity = selectedInstances.length;
   const isSelected = quantity > 0;
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleCardClick = () => {
     if (selectedCharms.length >= 7) {
@@ -406,7 +406,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsFullscreen(false)}
-                className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm cursor-pointer"
+                className="fixed inset-0 z-[1000] bg-transparent cursor-pointer"
               />
 
               {/* Modal */}
@@ -492,9 +492,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
                               alt={charm.name}
                               fill
                               className="object-contain"
-                              style={{
-                                filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7))',
-                              }}
                               sizes="(max-width: 768px) 100vw, 50vw"
                               fallbackTransform="translate(0px, 0px)"
                             />
@@ -502,8 +499,13 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
                           {/* Loading spinner for 3D */}
                           {shouldLoad3D && !is3DLoaded ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-xl">
+                                <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-500/30 border-t-yellow-600"></div>
+                                <span className="text-sm font-bold text-black px-2">
+                                  {language === 'nl' ? '3D-model laden...' : '3D model loading...'}
+                                </span>
+                              </div>
                             </div>
                           ) : null}
                         </>
@@ -514,9 +516,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
                             alt={charm.name}
                             fill
                             className="object-contain"
-                            style={{
-                              filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7))',
-                            }}
                             sizes="(max-width: 768px) 100vw, 50vw"
                             fallbackTransform="translate(0px, 0px)"
                           />

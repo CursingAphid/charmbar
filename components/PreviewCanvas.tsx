@@ -5,7 +5,7 @@ import { useStore, SelectedCharm } from '@/store/useStore';
 import { getCharmImageUrl } from '@/lib/db';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, GripVertical, Trash2 } from 'lucide-react';
+import { Minimize, RotateCw, ZoomIn, ZoomOut, GripVertical, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -259,7 +259,7 @@ export default function PreviewCanvas() {
   const renderPreviewContent = (viewportRef: React.RefObject<HTMLDivElement | null>) => (
     <div
       ref={viewportRef}
-      className="w-full max-w-[1000px] aspect-[800/350] rounded-lg overflow-hidden bg-pink-50 relative"
+      className="w-full max-w-[1000px] aspect-[800/350] rounded-lg overflow-hidden bg-gray-50 relative"
     >
       <motion.div
         key={selectedBracelet.id}
@@ -301,14 +301,23 @@ export default function PreviewCanvas() {
                   <motion.div
                     key={selectedCharm.id}
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      y: 0,
+                      left: `${(position.x / 800) * 100}%`,
+                      top: `${(position.y / 350) * 100}%`,
+                    }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+                    transition={{
+                      opacity: { type: 'spring', stiffness: 220, damping: 18 },
+                      scale: { type: 'spring', stiffness: 220, damping: 18 },
+                      y: { type: 'spring', stiffness: 220, damping: 18 },
+                      left: { type: 'spring', stiffness: 300, damping: 30 },
+                      top: { type: 'spring', stiffness: 300, damping: 30 },
+                    }}
                     className="absolute z-10"
                     style={{
-                      left: `${(position.x / 800) * 100}%`,
-                      // Positions were authored against an 800x350 preview box (matches the preview aspect ratio)
-                      top: `${(position.y / 350) * 100}%`,
                       width: '18.75%',
                       aspectRatio: '1 / 1',
                       transform: 'translateX(-50%)',
@@ -343,6 +352,7 @@ export default function PreviewCanvas() {
                   unoptimized
                   draggable={false}
                   priority
+                  placeholder="empty"
                 />
               </div>
             ) : (
@@ -360,7 +370,7 @@ export default function PreviewCanvas() {
   );
 
   const renderInfoPanel = () => (
-    <div className="bg-white/95 backdrop-blur-sm border-t border-pink-200 p-4">
+    <div className="bg-white/95 backdrop-blur-sm border-t border-yellow-500 p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-sm font-semibold text-gray-900">{selectedBracelet?.name || 'No bracelet selected'}</p>
@@ -430,7 +440,7 @@ export default function PreviewCanvas() {
 
   return (
     <>
-      <div className="w-full rounded-xl flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50 border-2 border-pink-200 overflow-hidden">
+      <div className="w-full rounded-xl flex flex-col bg-gray-50 border-2 border-yellow-500 overflow-hidden">
         <div className="relative min-h-0">
           <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 flex gap-1 sm:gap-2">
             <button
@@ -457,13 +467,6 @@ export default function PreviewCanvas() {
             >
               <RotateCw className="w-4 h-4 text-gray-700" />
             </button>
-            <button
-              onClick={handleToggleExpanded}
-              className="p-1.5 sm:p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors"
-              type="button"
-            >
-              <Maximize className="w-4 h-4 text-gray-700" />
-            </button>
           </div>
           <div className="w-full flex items-center justify-center p-2 sm:p-3">
             {renderPreviewContent(viewportRef)}
@@ -481,7 +484,7 @@ export default function PreviewCanvas() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleToggleExpanded}
-                className="absolute inset-0 bg-gradient-to-br from-black/35 via-fuchsia-950/25 to-pink-950/25 backdrop-blur-md"
+                className="absolute inset-0 bg-transparent"
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -491,7 +494,7 @@ export default function PreviewCanvas() {
                 className="absolute inset-0 z-[2010] flex items-center justify-center p-4 sm:p-8 pointer-events-none"
               >
                 <div
-                  className="w-full max-w-6xl bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50 border-2 border-pink-200 rounded-xl overflow-hidden shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]"
+                  className="w-full max-w-6xl bg-gray-50 border-2 border-yellow-500 rounded-xl overflow-hidden shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="relative flex-1 min-h-0">

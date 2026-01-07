@@ -44,7 +44,8 @@ const translations = {
     
     // Charms page
     'charms.title': 'Choose Your Charms',
-    'charms.description': 'Select as many charms as you\'d like to personalize your',
+    'charms.description': 'Select up to 7 charms and arrange them in the order you want',
+    'charms.hero.customize': 'Create Your Perfect Jewelry',
     'charms.chooseBracelet': 'Choose your bracelet',
     'charms.search.placeholder': 'Search charms...',
     'charms.preview.title': 'Live Preview',
@@ -109,7 +110,8 @@ const translations = {
     
     // Charms page
     'charms.title': 'Kies Je Charms',
-    'charms.description': 'Selecteer zoveel charms als je wilt om je te personaliseren',
+    'charms.description': 'Selecteer maximaal 7 charms en zet ze in de volgorde die je wilt',
+    'charms.hero.customize': 'Creëer Je Perfecte Sieraden',
     'charms.chooseBracelet': 'Kies je armband',
     'charms.search.placeholder': 'Zoek charms...',
     'charms.preview.title': 'Live Voorbeeld',

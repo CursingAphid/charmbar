@@ -205,17 +205,21 @@ export default function CharmsPage() {
 
       {/* Extra bottom padding on mobile so the fixed bottom bar never covers content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-32 lg:pb-8">
+        {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="text-center mb-12 py-12"
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             {t('charms.title')}
           </h1>
-          <p className="text-gray-600">
-            {t('charms.description')} {selectedBracelet?.name ?? ''}
+          <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
+            {t('charms.description')}
           </p>
+          <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium">
+            ✨ {t('charms.hero.customize')} ✨
+          </div>
         </motion.div>
 
         {/* Bracelet Dropdown (inside editor) */}
@@ -388,9 +392,6 @@ export default function CharmsPage() {
                   {t('charms.preview.description')}
                 </p>
               </div>
-              <div className="mb-6">
-                <PreviewCanvas />
-              </div>
 
               {/* Gold Tint Warning */}
               <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
@@ -398,6 +399,10 @@ export default function CharmsPage() {
                 <p className="text-xs text-amber-800 leading-relaxed italic">
                   {t('charms.preview.goldWarning')}
                 </p>
+              </div>
+
+              <div className="mb-6">
+                <PreviewCanvas />
               </div>
 
               {/* Summary */}
