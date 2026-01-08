@@ -8,7 +8,7 @@ import { Charm } from '@/lib/db';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, Image as ImageIcon, Plus } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from './ToastProvider';
@@ -34,7 +34,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
   const [isMounted] = useState(true); // Components are mounted when they render
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [showBackground, setShowBackground] = useState(true); // Per-card background toggle
-  const [isVisible, setIsVisible] = useState(true); // Track if card is visible on screen
   const [glbLoadError, setGlbLoadError] = useState(false); // Track if 3D model failed to load
   const [shouldLoad3D, setShouldLoad3D] = useState(false); // Lazy-load 3D only after user intent
   const [is3DLoaded, setIs3DLoaded] = useState(false); // Track if 3D model has finished loading
@@ -70,7 +69,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
     loadBackground();
   }, [charm.id, charm.background_id]);
 
-  // Intersection observer to reset 3D models on mobile when off-screen
+  // Intersection observer to reset hover state on mobile when off-screen
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
@@ -85,17 +84,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
         entries.forEach((entry) => {
           const isIntersecting = entry.isIntersecting;
 
-          setIsVisible(isIntersecting);
-
           // Reset hover state when card goes off-screen on mobile
           if (!isIntersecting && isHovered && !isInteracting && !isFullscreen) {
             setIsHovered(false);
             isPointerInsideRef.current = false;
-          }
-
-          // On mobile, unload 3D when offscreen to save resources (reset back to 2D)
-          if (!isIntersecting) {
-            setShouldLoad3D(false);
           }
         });
       },
@@ -230,19 +222,6 @@ export default function CharmCard({ charm }: CharmCardProps) {
       >
         {/* Left side action buttons */}
         <div className="absolute top-2 left-2 z-10 flex gap-1">
-          {/* Fullscreen button */}
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white/90 hover:bg-white text-gray-700 rounded-full p-1.5 shadow-lg transition-colors"
-            aria-label="View charm in fullscreen"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </motion.button>
-
           {/* Background toggle */}
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
@@ -301,24 +280,14 @@ export default function CharmCard({ charm }: CharmCardProps) {
               className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0 shadow-lg transition-colors"
               aria-label="Remove charm"
             >
-              <X className="w-5 h-5" />
+              <Trash2 className="w-5 h-5" />
             </motion.button>
           )}
         </div>
 
-        {/* Quantity badge - shown when quantity > 1 */}
-        {isSelected && quantity > 1 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute top-2 left-2 z-20 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg"
-          >
-            {quantity}
-          </motion.div>
-        )}
 
         <div
-          className="relative h-40 sm:h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-3 sm:p-4"
+          className="relative h-32 sm:h-52 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-2 sm:p-3"
           style={backgroundUrl && showBackground ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
@@ -341,13 +310,13 @@ export default function CharmCard({ charm }: CharmCardProps) {
           />
         </div>
 
-        <div className="p-3 sm:p-4">
-          <div className="mb-2">
-            <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-0.5 sm:mb-1 line-clamp-1">{charm.name}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">{charm.description}</p>
+        <div className="p-2 sm:p-3">
+          <div className="mb-1">
+            <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-0.5 line-clamp-1">{charm.name}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-600 line-clamp-1">{charm.description}</p>
           </div>
-          <div className="flex items-center justify-between mb-2 sm:mb-4">
-            <span className="text-base sm:text-lg font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">€{charm.price.toFixed(2)}</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm sm:text-base font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">€{charm.price.toFixed(2)}</span>
             {isSelected && (
               <div className="flex items-center gap-1">
                 <motion.button
@@ -365,13 +334,13 @@ export default function CharmCard({ charm }: CharmCardProps) {
                       showToast(`Removed ${charm.name}`, 'success');
                     }
                   }}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center shadow-sm transition-colors text-sm font-medium"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 flex items-center justify-center shadow-sm transition-colors text-xs font-medium"
                   aria-label="Remove one charm"
                   title="Remove one charm"
                 >
                   -
                 </motion.button>
-                <span className="text-sm font-semibold text-gray-900 min-w-[20px] text-center">
+                <span className="text-xs font-semibold text-gray-900 min-w-[16px] text-center">
                   {quantity}
                 </span>
                 <motion.button
@@ -383,7 +352,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                     e.stopPropagation();
                     handleCardClick();
                   }}
-                  className="bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] text-gray-900 ring-1 ring-black/10 rounded-full w-6 h-6 flex items-center justify-center shadow-sm transition-colors text-sm font-medium"
+                  className="bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] text-gray-900 ring-1 ring-black/10 rounded-full w-5 h-5 flex items-center justify-center shadow-sm transition-colors text-xs font-medium"
                   aria-label="Add another charm"
                   title="Add another charm"
                 >
@@ -497,17 +466,16 @@ export default function CharmCard({ charm }: CharmCardProps) {
                             />
                           </div>
 
-                          {/* Loading spinner for 3D */}
-                          {shouldLoad3D && !is3DLoaded ? (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-xl">
-                                <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-500/30 border-t-yellow-600"></div>
-                                <span className="text-sm font-bold text-black px-2">
-                                  {language === 'nl' ? '3D-model laden...' : '3D model loading...'}
-                                </span>
-                              </div>
+                          {/* 3D Loading indicator - positioned in top left */}
+                          {shouldLoad3D && !is3DLoaded && (
+                            <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-white/50">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-500/30 border-t-yellow-600"></div>
+                              <span className="text-xs font-semibold text-gray-800">
+                                {language === 'nl' ? '3D laden...' : '3D loading...'}
+                              </span>
                             </div>
-                          ) : null}
+                          )}
+
                         </>
                       ) : (
                         <div className="relative w-full h-full flex items-center justify-center">

@@ -7,14 +7,18 @@ import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { motion } from 'framer-motion';
-import { CreditCard, MapPin, Mail, User, Phone, ArrowLeft } from 'lucide-react';
+import { CreditCard, MapPin, Mail, User, Phone, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { getCharmImageUrl } from '@/lib/db';
+import { getBraceletSnapPoints, DEFAULT_SNAP_POINTS } from '@/lib/braceletSnapPoints';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const cart = useStore((state) => state.cart);
   const getCartTotal = useStore((state) => state.getCartTotal);
   const clearSelection = useStore((state) => state.clearSelection);
+  const reorderCartItemCharms = useStore((state) => state.reorderCartItemCharms);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,6 +64,28 @@ export default function CheckoutPage() {
     formData.city &&
     formData.zipCode &&
     formData.country;
+
+  const handleMoveCharmUp = (cartItemId: string, charmIndex: number) => {
+    if (charmIndex === 0) return; // Already at the top
+    const cartItem = cart.find(item => item.id === cartItemId);
+    if (!cartItem) return;
+
+    const newCharms = [...cartItem.charms];
+    [newCharms[charmIndex], newCharms[charmIndex - 1]] = [newCharms[charmIndex - 1], newCharms[charmIndex]];
+
+    reorderCartItemCharms(cartItemId, newCharms);
+  };
+
+  const handleMoveCharmDown = (cartItemId: string, charmIndex: number) => {
+    const cartItem = cart.find(item => item.id === cartItemId);
+    if (!cartItem) return;
+
+    if (charmIndex === cartItem.charms.length - 1) return; // Already at the bottom
+    const newCharms = [...cartItem.charms];
+    [newCharms[charmIndex], newCharms[charmIndex + 1]] = [newCharms[charmIndex + 1], newCharms[charmIndex]];
+
+    reorderCartItemCharms(cartItemId, newCharms);
+  };
 
   return (
     <div className="min-h-screen">
@@ -270,21 +296,75 @@ export default function CheckoutPage() {
                         item.bracelet.price +
                         item.charms.reduce((sum, sc) => sum + sc.charm.price, 0);
                       return (
-                        <div key={item.id} className="border-b border-gray-200 pb-4 last:border-0">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-gray-900">{item.bracelet.name}</span>
-                            <span className="font-semibold text-gray-900">
-                              ${itemTotal.toFixed(2)}
+                        <div key={item.id} className="border-b border-gray-200 pb-6 last:border-0">
+                          {/* Full-width Mini Preview on Top */}
+                          <div className="w-full aspect-[800/350] bg-gray-50 relative rounded-lg overflow-hidden mb-4 border border-gray-100">
+                            {item.bracelet.openImage ? (
+                              <Image
+                                src={item.bracelet.openImage}
+                                alt={item.bracelet.name}
+                                fill
+                                className="object-contain"
+                                sizes="(max-width: 768px) 100vw, 400px"
+                              />
+                            ) : (
+                              <Image
+                                src={item.bracelet.image}
+                                alt={item.bracelet.name}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 400px"
+                              />
+                            )}
+
+                            {/* Positioned charms */}
+                            {item.charms.map((charmItem, charmIndex) => {
+                              const positionIndex = (item as any).charmPositions?.[charmItem.id];
+                              if (positionIndex === undefined) return null;
+
+                              const snapPoints = getBraceletSnapPoints(item.bracelet.id) || DEFAULT_SNAP_POINTS;
+                              const position = snapPoints[positionIndex];
+                              if (!position) return null;
+
+                              return (
+                                <div
+                                  key={charmItem.id}
+                                  className="absolute z-10 pointer-events-none"
+                                  style={{
+                                    left: `${(position.x / 800) * 100}%`,
+                                    top: `${(position.y / 350) * 100}%`,
+                                    width: '18.75%',
+                                    aspectRatio: '1 / 1',
+                                    translate: '-50% -50%',
+                                  }}
+                                >
+                                  <div className="relative w-full h-full">
+                                    <Image
+                                      src={getCharmImageUrl(charmItem.charm)}
+                                      alt={charmItem.charm.name}
+                                      fill
+                                      className="object-contain drop-shadow-sm"
+                                      sizes="40px"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="font-bold text-gray-900 block">{item.bracelet.name}</span>
+                              {item.charms.length > 0 && (
+                                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                                  {item.charms.length} {item.charms.length !== 1 ? 'Charms' : 'Charm'} included
+                                </p>
+                              )}
+                            </div>
+                            <span className="font-bold text-gray-900">
+                              €{itemTotal.toFixed(2)}
                             </span>
                           </div>
-                          {item.charms.length > 0 && (
-                            <p className="text-sm text-gray-600">
-                              {item.charms.length} charm
-                              {item.charms.length !== 1
-                                ? 's'
-                                : ''}
-                            </p>
-                          )}
                         </div>
                       );
                     })}
@@ -293,7 +373,7 @@ export default function CheckoutPage() {
                   <div className="space-y-3 pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Subtotal:</span>
-                      <span>${getCartTotal().toFixed(2)}</span>
+                      <span>€{getCartTotal().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Shipping:</span>
@@ -301,7 +381,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                       <span>Total:</span>
-                      <span className="text-pink-600">${getCartTotal().toFixed(2)}</span>
+                      <span className="bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] bg-clip-text text-transparent">€{getCartTotal().toFixed(2)}</span>
                     </div>
                   </div>
                 </Card>

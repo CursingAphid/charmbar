@@ -59,7 +59,7 @@ export default function CartPage() {
               </p>
             </div>
             <Link href="/">
-              <Button variant="outline" size="sm">
+              <Button size="sm" className="flex items-center">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Continue Shopping
               </Button>
@@ -84,12 +84,12 @@ export default function CartPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm sm:sticky sm:bottom-4"
+            className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm sm:sticky sm:bottom-4 z-30"
           >
             <div className="space-y-4 mb-6">
               <div className="flex justify-between text-lg">
                 <span className="font-semibold text-gray-900">Subtotal:</span>
-                <span className="font-semibold text-gray-900">${getCartTotal().toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">€{getCartTotal().toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Shipping:</span>
@@ -97,8 +97,8 @@ export default function CartPage() {
               </div>
               <div className="border-t border-gray-200 pt-4 flex justify-between">
                 <span className="text-xl font-bold text-gray-900">Total:</span>
-                <span className="text-xl font-bold text-pink-600">
-                  ${getCartTotal().toFixed(2)}
+                <span className="text-xl font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
+                  €{getCartTotal().toFixed(2)}
                 </span>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function CartPage() {
       <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">${getCartTotal().toFixed(2)}</p>
+            <p className="text-sm font-semibold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">€{getCartTotal().toFixed(2)}</p>
             <p className="text-xs text-gray-600 truncate">Total</p>
           </div>
           <Button

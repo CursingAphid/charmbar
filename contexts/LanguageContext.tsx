@@ -62,6 +62,9 @@ const translations = {
     'charms.limitReached': 'Maximum 7 charms allowed',
     'charms.backgroundsOn': 'Backgrounds On',
     'charms.backgroundsOff': 'Backgrounds Off',
+    'charms.selected.title': 'Selected Charms',
+    'charms.selected.charm': 'charm',
+    'charms.selected.charms': 'charms',
     
     // Cart
     'cart.title': 'Shopping Cart',
@@ -128,6 +131,9 @@ const translations = {
     'charms.limitReached': 'Maximaal 7 charms toegestaan',
     'charms.backgroundsOn': 'Achtergronden Aan',
     'charms.backgroundsOff': 'Achtergronden Uit',
+    'charms.selected.title': 'Geselecteerde Charms',
+    'charms.selected.charm': 'charm',
+    'charms.selected.charms': 'charms',
     
     // Cart
     'cart.title': 'Winkelwagen',

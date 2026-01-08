@@ -5,6 +5,7 @@ import { Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { getCharmImageUrl, type Charm, type Bracelet } from '@/lib/db';
+import { getBraceletSnapPoints, DEFAULT_SNAP_POINTS } from '@/lib/braceletSnapPoints';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { useToast } from './ToastProvider';
@@ -17,6 +18,7 @@ interface CartItemProps {
       id: string;
       charm: Charm;
     }>;
+    charmPositions: Record<string, number>;
   };
 }
 
@@ -24,10 +26,16 @@ export default function CartItem({ cartItem }: CartItemProps) {
   const router = useRouter();
   const removeFromCart = useStore((state) => state.removeFromCart);
   const setBracelet = useStore((state) => state.setBracelet);
+  const reorderCharms = useStore((state) => state.reorderCharms);
+  const updateCharmPositions = useStore((state) => state.updateCharmPositions);
+  const setEditingCartItemId = useStore((state) => state.setEditingCartItemId);
 
   const handleEdit = () => {
-    // Use the bracelet data directly from the cart item
+    // Restore the exact design into the editor (bracelet + charm instances + their positions)
     setBracelet(cartItem.bracelet);
+    reorderCharms(cartItem.charms);
+    updateCharmPositions(cartItem.charmPositions || {});
+    setEditingCartItemId(cartItem.id);
     router.push('/charms');
   };
 
@@ -55,64 +63,117 @@ export default function CartItem({ cartItem }: CartItemProps) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="p-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Bracelet Image */}
-          <div className="relative w-full md:w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+      {/* Full-width Bracelet Preview on Top */}
+      <div className="w-full aspect-[800/350] bg-gray-50 relative border-b border-gray-100 overflow-hidden">
+        {/* Bracelet background */}
+        <div className="absolute inset-0">
+          {cartItem.bracelet.openImage ? (
+            <Image
+              src={cartItem.bracelet.openImage}
+              alt={cartItem.bracelet.name}
+              fill
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 800px"
+              priority
+            />
+          ) : (
             <Image
               src={cartItem.bracelet.image}
               alt={cartItem.bracelet.name}
               fill
-              className="object-cover"
-              sizes="128px"
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 800px"
+              priority
             />
-          </div>
+          )}
+        </div>
 
+        {/* Positioned charms */}
+        {cartItem.charms.map((charmItem) => {
+          const positionIndex = cartItem.charmPositions[charmItem.id];
+          if (positionIndex === undefined) return null;
+
+          const snapPoints = getBraceletSnapPoints(cartItem.bracelet.id) || DEFAULT_SNAP_POINTS;
+          const position = snapPoints[positionIndex];
+          if (!position) return null;
+
+          return (
+            <div
+              key={charmItem.id}
+              className="absolute z-10 pointer-events-none"
+              style={{
+                left: `${(position.x / 800) * 100}%`,
+                top: `${(position.y / 350) * 100}%`,
+                width: '18.75%',
+                aspectRatio: '1 / 1',
+                translate: '-50% -50%',
+              }}
+            >
+              <div className="relative w-full h-full">
+                <Image
+                  src={getCharmImageUrl(charmItem.charm)}
+                  alt={charmItem.charm.name}
+                  fill
+                  className="object-contain drop-shadow-lg"
+                  sizes="(max-width: 1024px) 18.75vw, 150px"
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-6">
+        <div className="flex flex-col gap-6">
           {/* Details */}
           <div className="flex-1">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
                   {cartItem.bracelet.name}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  €{cartItem.bracelet.price.toFixed(2)}
+                <p className="text-sm text-gray-600 font-medium">
+                  Bracelet: €{cartItem.bracelet.price.toFixed(2)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold text-pink-600">${itemTotal.toFixed(2)}</p>
+                <p className="text-2xl font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
+                  €{itemTotal.toFixed(2)}
+                </p>
               </div>
             </div>
 
             {/* Charms List */}
             {groupedCharms.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium text-gray-700 mb-2">Charms:</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <p className="text-xs uppercase tracking-wider font-bold text-gray-400 mb-3">
+                  Included Charms:
+                </p>
+                <div className="flex flex-wrap gap-3">
                   {groupedCharms.map((group) => (
                     <div
                       key={group.charm.id}
-                      className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"
+                      className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:bg-white hover:shadow-sm transition-all"
                     >
-                      <div className="relative w-8 h-8">
+                      <div className="relative w-10 h-10 flex-shrink-0">
                         <Image
                           src={getCharmImageUrl(group.charm)}
                           alt={group.charm.name}
                           fill
-                          className="object-cover rounded"
-                          sizes="32px"
+                          className="object-contain"
+                          sizes="40px"
                         />
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium text-gray-700">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-gray-900 leading-tight">
                           {group.charm.name}
+                          {group.quantity > 1 && (
+                            <span className="ml-1 text-pink-500 font-extrabold text-xs">
+                              (×{group.quantity})
+                            </span>
+                          )}
                         </span>
-                        {group.quantity > 1 && (
-                          <span className="text-xs text-gray-500">
-                            (×{group.quantity})
-                          </span>
-                        )}
-                        <span className="text-sm text-gray-600">
+                        <span className="text-[11px] font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
                           €{(group.charm.price * group.quantity).toFixed(2)}
                         </span>
                       </div>
@@ -123,21 +184,18 @@ export default function CartItem({ cartItem }: CartItemProps) {
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-3 mt-8 pt-6 border-t border-gray-100">
               <Button
-                variant="outline"
-                size="sm"
                 onClick={handleEdit}
-                className="flex items-center gap-2"
+                className="flex-1 flex items-center justify-center gap-2"
               >
                 <Edit className="w-4 h-4" />
-                Edit
+                Edit Design
               </Button>
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRemove}
-                className="flex items-center gap-2"
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border-none"
               >
                 <Trash2 className="w-4 h-4" />
                 Remove

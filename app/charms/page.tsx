@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBracelets, getCharms, getCharmsByTag, getCharmCategories, type Bracelet, type Charm } from '@/lib/db';
+import Image from 'next/image';
+import { getBracelets, getCharms, getCharmsByTag, getCharmCategories, getCharmImageUrl, type Bracelet, type Charm } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
@@ -10,7 +11,7 @@ import PreviewCanvas from '@/components/PreviewCanvas';
 import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronDown, Info, Image, Eye, Filter, EyeOff } from 'lucide-react';
+import { Search, ShoppingBag, X, ChevronDown, Info, Eye, Filter, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 import { getCharmGlbUrl } from '@/lib/db';
 import { useGLTF } from '@react-three/drei';
@@ -20,6 +21,9 @@ export default function CharmsPage() {
   const selectedBracelet = useStore((state) => state.selectedBracelet);
   const setBracelet = useStore((state) => state.setBracelet);
   const selectedCharms = useStore((state) => state.selectedCharms);
+  const addCharm = useStore((state) => state.addCharm);
+  const removeCharm = useStore((state) => state.removeCharm);
+  const reorderCharms = useStore((state) => state.reorderCharms);
   const addToCart = useStore((state) => state.addToCart);
   const getTotalPrice = useStore((state) => state.getTotalPrice);
   const { t } = useLanguage();
@@ -119,20 +123,14 @@ export default function CharmsPage() {
       return matchesCategory && matchesSearch;
     });
 
-    // Sort by: 1) Charms with backgrounds first, 2) Selected charms, 3) Rest
+    // Sort by: Charms with backgrounds first, then by original order
     return [...filtered].sort((a, b) => {
       const aHasBackground = !!a.background;
       const bHasBackground = !!b.background;
-      const aIsSelected = selectedCharms.some((sc) => sc.charm.id === a.id);
-      const bIsSelected = selectedCharms.some((sc) => sc.charm.id === b.id);
 
       // Charms with backgrounds always come first
       if (aHasBackground && !bHasBackground) return -1;
       if (!aHasBackground && bHasBackground) return 1;
-
-      // If both have backgrounds or neither do, then sort by selection
-      if (aIsSelected && !bIsSelected) return -1;
-      if (!aIsSelected && bIsSelected) return 1;
 
       return 0;
     });
@@ -364,7 +362,7 @@ export default function CharmsPage() {
 
             {/* Charms Grid */}
             {filteredCharms.length > 0 ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {filteredCharms.map((charm, index) => (
                   <motion.div
                     key={charm.id}
@@ -418,7 +416,7 @@ export default function CharmsPage() {
                         {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}:
                       </span>
                       <span className="font-semibold">
-                        $
+                        €
                         {selectedCharms
                           .reduce((sum, sc) => sum + sc.charm.price, 0)
                           .toFixed(2)}
@@ -427,8 +425,8 @@ export default function CharmsPage() {
                   )}
                   <div className="border-t border-gray-200 pt-3 flex justify-between">
                     <span className="font-bold text-gray-900">{t('charms.summary.total')}</span>
-                    <span className="font-bold text-lg text-pink-600">
-                      ${getTotalPrice().toFixed(2)}
+                    <span className="font-bold text-lg bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent">
+                      €{getTotalPrice().toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -510,28 +508,31 @@ export default function CharmsPage() {
             </button>
 
             {selectedCharms.length === 0 ? (
-              <div className="flex-1 text-center">
-                <p className="text-sm text-gray-600">
-                  Select charms to continue
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Tap charms above to add them
+              <div className="flex-1 h-11 flex flex-col justify-center items-center bg-gray-50 rounded-xl border border-gray-100">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-tight text-center">
+                  {t('charms.hero.customize')}
                 </p>
               </div>
             ) : (
               <>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    ${getTotalPrice().toFixed(2)}
+                <div className="min-w-0 flex-1 flex flex-col justify-center">
+                  <p className="text-[15px] font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent leading-none mb-1">
+                    €{getTotalPrice().toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-600 truncate">
-                    {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')} {t('charms.selected')}
+                  <p className="text-[11px] text-gray-500 font-medium truncate leading-none">
+                    {totalCharmsCount} {totalCharmsCount !== 1 ? t('charms.summary.charms_plural') : t('charms.summary.charms')}
                   </p>
                 </div>
 
-                <Button onClick={handleAddToCart} className="flex-1">
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  {t('charms.button.cart')}
+                <Button 
+                  onClick={handleAddToCart} 
+                  size="sm"
+                  className="flex-[1.8] flex items-center justify-center gap-2 h-11 px-4"
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
+                  <span className="text-sm font-bold whitespace-nowrap">
+                    {t('charms.button.cart')}
+                  </span>
                 </Button>
               </>
             )}

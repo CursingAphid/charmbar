@@ -24,21 +24,27 @@ export interface SelectedCharm {
 interface CartItem {
   bracelet: Bracelet;
   charms: SelectedCharm[]; // Now stores instances
+  charmPositions: Record<string, number>; // Maps charm instance ID to point index
   id: string;
 }
 
 interface StoreState {
   selectedBracelet: Bracelet | null;
   selectedCharms: SelectedCharm[];
+  charmPositions: Record<string, number>; // Current charm positioning
   cart: CartItem[];
+  editingCartItemId: string | null;
 
   // Actions
   setBracelet: (bracelet: Bracelet) => void;
   addCharm: (charm: Charm) => void;
   removeCharm: (instanceId: string) => void;
   reorderCharms: (newOrder: SelectedCharm[]) => void;
+  updateCharmPositions: (positions: Record<string, number>) => void;
+  setEditingCartItemId: (cartItemId: string | null) => void;
   addToCart: () => void;
   removeFromCart: (cartItemId: string) => void;
+  reorderCartItemCharms: (cartItemId: string, newCharmOrder: SelectedCharm[]) => void;
   clearSelection: () => void;
   getTotalPrice: () => number;
   getCartTotal: () => number;
@@ -50,7 +56,9 @@ export const useStore = create<StoreState>()(
     (set, get) => ({
   selectedBracelet: null, // No default bracelet - must be selected from database
   selectedCharms: [],
+  charmPositions: {},
   cart: [],
+  editingCartItemId: null,
 
   setBracelet: (bracelet) => {
     set({ selectedBracelet: bracelet });
@@ -81,26 +89,67 @@ export const useStore = create<StoreState>()(
     set({ selectedCharms: newOrder });
   },
 
+  updateCharmPositions: (positions) => {
+    set({ charmPositions: positions });
+  },
+
+  setEditingCartItemId: (cartItemId) => {
+    set({ editingCartItemId: cartItemId });
+  },
+
   addToCart: () => {
-    const { selectedBracelet, selectedCharms, cart } = get();
+    const { selectedBracelet, selectedCharms, charmPositions, cart, editingCartItemId } = get();
     if (!selectedBracelet) return;
-    
+
+    const isEditing = !!editingCartItemId && cart.some((c) => c.id === editingCartItemId);
+
+    if (isEditing) {
+      // Update existing cart item in-place
+      const updatedCart = cart.map((item) =>
+        item.id === editingCartItemId
+          ? {
+              ...item,
+              bracelet: selectedBracelet,
+              charms: [...selectedCharms],
+              charmPositions: { ...charmPositions },
+            }
+          : item
+      );
+
+      set({ cart: updatedCart, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
+      return;
+    }
+
     const cartItem: CartItem = {
       bracelet: selectedBracelet,
       charms: [...selectedCharms],
+      charmPositions: { ...charmPositions },
       id: `cart-${Date.now()}-${Math.random()}`,
     };
-    
-    set({ cart: [...cart, cartItem], selectedCharms: [] }); // Clear editor after adding to cart
+
+    set({ cart: [...cart, cartItem], selectedCharms: [], charmPositions: {}, editingCartItemId: null }); // Clear editor after adding to cart
   },
 
   removeFromCart: (cartItemId) => {
+    const { cart, editingCartItemId } = get();
+    set({
+      cart: cart.filter((item) => item.id !== cartItemId),
+      editingCartItemId: editingCartItemId === cartItemId ? null : editingCartItemId,
+    });
+  },
+
+  reorderCartItemCharms: (cartItemId, newCharmOrder) => {
     const { cart } = get();
-    set({ cart: cart.filter((item) => item.id !== cartItemId) });
+    const updatedCart = cart.map((item) =>
+      item.id === cartItemId
+        ? { ...item, charms: newCharmOrder }
+        : item
+    );
+    set({ cart: updatedCart });
   },
 
   clearSelection: () => {
-    set({ selectedBracelet: null, selectedCharms: [] });
+    set({ selectedBracelet: null, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
   },
 
   hasSelectedBracelet: () => {
@@ -135,21 +184,20 @@ export const useStore = create<StoreState>()(
     {
       name: 'charm-selection-storage',
       storage: createJSONStorage(() => {
-        // Use cookies for persistence on client, fallback to localStorage for SSR
+        // Use localStorage for persistence on client (cookie size limits are too small for this state).
         if (typeof window !== 'undefined') {
           return {
             getItem: (name: string) => {
-              const value = document.cookie
-                .split('; ')
-                .find(row => row.startsWith(name + '='))
-                ?.split('=')[1];
-              return value ? JSON.parse(decodeURIComponent(value)) : null;
+              const raw = window.localStorage.getItem(name);
+              // IMPORTANT: createJSONStorage() handles JSON.parse/JSON.stringify.
+              // We must return the raw string here.
+              return raw;
             },
             setItem: (name: string, value: string) => {
-              document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+              window.localStorage.setItem(name, value);
             },
             removeItem: (name: string) => {
-              document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+              window.localStorage.removeItem(name);
             },
           };
         }
@@ -160,10 +208,13 @@ export const useStore = create<StoreState>()(
           removeItem: () => {},
         };
       }),
-      // Only persist the charm selection state, not the cart
+      // Persist selection + cart so refresh doesn't wipe the user's basket.
       partialize: (state) => ({
         selectedBracelet: state.selectedBracelet,
         selectedCharms: state.selectedCharms,
+        charmPositions: state.charmPositions,
+        cart: state.cart,
+        editingCartItemId: state.editingCartItemId,
       }),
     }
   )

@@ -4,16 +4,19 @@ import Image from 'next/image';
 import { useStore, SelectedCharm } from '@/store/useStore';
 import { getCharmImageUrl } from '@/lib/db';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Minimize, RotateCw, ZoomIn, ZoomOut, GripVertical, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Minimize, RotateCw, ZoomIn, ZoomOut, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { DEFAULT_SNAP_POINTS, getBraceletSnapPoints } from '@/lib/braceletSnapPoints';
 
 export default function PreviewCanvas() {
   const selectedBracelet = useStore((state) => state.selectedBracelet);
   const selectedCharms = useStore((state) => state.selectedCharms);
   const removeCharm = useStore((state) => state.removeCharm);
   const reorderCharms = useStore((state) => state.reorderCharms);
+  const updateCharmPositions = useStore((state) => state.updateCharmPositions);
+  const persistedCharmPositions = useStore((state) => state.charmPositions);
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -25,10 +28,23 @@ export default function PreviewCanvas() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const expandedViewportRef = useRef<HTMLDivElement>(null);
   const [viewportSize, setViewportSize] = useState({ w: 800, h: 350 });
+  const [charmPointIndexById, setCharmPointIndexById] = useState<Record<string, number>>({});
+  const charmPointIndexByIdRef = useRef<Record<string, number>>({});
+  const [draggingCharmId, setDraggingCharmId] = useState<string | null>(null);
+  const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
+  const dragOffsetRef = useRef<{ dx: number; dy: number } | null>(null); // in 800x350 design space
+  const prevCharmCountRef = useRef<number>(0);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const braceletId = selectedBracelet?.id ?? null;
+  const snapPoints = useMemo(
+    () => getBraceletSnapPoints(braceletId) ?? DEFAULT_SNAP_POINTS,
+    [braceletId]
+  );
+  const snapPointCount = snapPoints.length;
 
   const handleToggleExpanded = () => {
     setIsExpanded((prev) => !prev);
@@ -44,52 +60,143 @@ export default function PreviewCanvas() {
     };
   }, [isExpanded]);
 
-  // Fixed positions for charms on the chain based on the total count selected (1-7)
-  const charmPositionsMap: Record<number, { x: number; y: number }[]> = {
-    1: [{ x: 320, y: 200 }], // P4
-    2: [
-      { x: 210, y: 180 }, // P3
-      { x: 430, y: 180 }, // P5
-    ],
-    3: [
-      { x: 100, y: 140 }, // P2
-      { x: 320, y: 200 }, // P4
-      { x: 540, y: 140 }, // P6
-    ],
-    4: [
-      { x: 0, y: 80 },   // P1
-      { x: 210, y: 180 }, // P3
-      { x: 430, y: 180 }, // P5
-      { x: 650, y: 80 },  // P7
-    ],
-    5: [
-      { x: 0, y: 80 },   // P1
-      { x: 155, y: 160 }, // P2
-      { x: 320, y: 200 }, // P4
-      { x: 490, y: 160 }, // P6
-      { x: 650, y: 80 },  // P7
-    ],
-    6: [
-      { x: 50, y: 110 },   // P1
-      { x: 155, y: 160 }, // P2
-      { x: 270, y: 200 }, // P3
-      { x: 380, y: 180 }, // P5
-      { x: 490, y: 160 }, // P6
-      { x: 590, y: 110 },  // P7
-    ],
-    7: [
-      { x: 0, y: 80 },   // P1
-      { x: 100, y: 140 }, // P2
-      { x: 210, y: 180 }, // P3
-      { x: 320, y: 200 }, // P4
-      { x: 430, y: 180 }, // P5
-      { x: 540, y: 140 }, // P6
-      { x: 650, y: 80 },  // P7
-    ],
-  };
-
   const totalCharms = selectedCharms.length;
-  const charmPositions = charmPositionsMap[totalCharms as keyof typeof charmPositionsMap] || charmPositionsMap[5];
+
+  const getEvenlySpacedPointIndices = useCallback((count: number) => {
+    if (count <= 0) return [] as number[];
+    if (count === 1) return [Math.floor((snapPointCount - 1) / 2)];
+    return Array.from({ length: count }, (_, i) =>
+      Math.round((i * (snapPointCount - 1)) / (count - 1))
+    );
+  }, [snapPointCount]);
+
+  useEffect(() => {
+    charmPointIndexByIdRef.current = charmPointIndexById;
+  }, [charmPointIndexById]);
+
+  // Keep a stable mapping of charm instance -> point index (assign new charms to nearest available evenly-spaced slot)
+  useEffect(() => {
+    const nextCount = selectedCharms.length;
+    if (nextCount === 0) {
+      if (Object.keys(charmPointIndexById).length > 0) setCharmPointIndexById({});
+      prevCharmCountRef.current = 0;
+      return;
+    }
+
+    // If we have persisted positions (e.g. coming from "Edit Design"), hydrate the local mapping from them.
+    // This ensures the preview snaps exactly where the user left it.
+    const desired = getEvenlySpacedPointIndices(nextCount);
+    const occupied = new Set<number>();
+    const fromPersisted: Record<string, number> = {};
+    for (const sc of selectedCharms) {
+      const idx = persistedCharmPositions?.[sc.id];
+      if (typeof idx === 'number') {
+        const clamped = Math.max(0, Math.min(snapPoints.length - 1, idx));
+        fromPersisted[sc.id] = clamped;
+        occupied.add(clamped);
+      }
+    }
+    const hasAnyPersisted = Object.keys(fromPersisted).length > 0;
+    if (hasAnyPersisted && Object.keys(charmPointIndexById).length === 0) {
+      // Fill any missing with nearest available evenly-spaced slot
+      for (const sc of selectedCharms) {
+        if (fromPersisted[sc.id] === undefined) {
+          let best = desired[0] ?? 0;
+          for (const d of desired) {
+            if (!occupied.has(d)) {
+              best = d;
+              break;
+            }
+          }
+          fromPersisted[sc.id] = best;
+          occupied.add(best);
+        }
+      }
+      setCharmPointIndexById(fromPersisted);
+      // Keep order aligned left->right
+      const nextStoreOrder = [...selectedCharms].sort(
+        (a, b) => (fromPersisted[a.id] ?? 0) - (fromPersisted[b.id] ?? 0)
+      );
+      const orderChanged = nextStoreOrder.some((sc, i) => sc.id !== selectedCharms[i].id);
+      if (orderChanged) reorderCharms(nextStoreOrder);
+      prevCharmCountRef.current = nextCount;
+      return;
+    }
+
+    const countChanged = prevCharmCountRef.current !== nextCount;
+    prevCharmCountRef.current = nextCount;
+
+    if (countChanged) {
+      const prevMapping = charmPointIndexByIdRef.current;
+      
+      // Preserve prior left-to-right order (by previous point index) when reflowing
+      const ordered = [...selectedCharms].sort((a, b) => {
+        const ai = prevMapping[a.id];
+        const bi = prevMapping[b.id];
+        const aHas = typeof ai === 'number';
+        const bHas = typeof bi === 'number';
+        if (aHas && bHas) return ai - bi;
+        if (aHas && !bHas) return -1;
+        if (!aHas && bHas) return 1;
+        return 0;
+      });
+
+      const nextMapping: Record<string, number> = {};
+      for (let i = 0; i < ordered.length; i++) {
+        nextMapping[ordered[i].id] = desired[i] ?? desired[desired.length - 1] ?? 0;
+      }
+
+      setCharmPointIndexById(nextMapping);
+
+      // Keep the reorder strip/store order aligned with left→right point positions
+      const nextStoreOrder = [...selectedCharms].sort(
+        (a, b) => (nextMapping[a.id] ?? 0) - (nextMapping[b.id] ?? 0)
+      );
+      const orderChanged = nextStoreOrder.some((sc, i) => sc.id !== selectedCharms[i].id);
+      if (orderChanged) {
+        reorderCharms(nextStoreOrder);
+      }
+    } else {
+      // If count is same, just ensure all IDs are in the mapping (defensive)
+      const prevMapping = charmPointIndexByIdRef.current;
+      const currentIds = new Set(selectedCharms.map(sc => sc.id));
+      let mappingChanged = false;
+      const nextMapping: Record<string, number> = {};
+
+      // Cleanup
+      for (const [id, idx] of Object.entries(prevMapping)) {
+        if (currentIds.has(id)) {
+          nextMapping[id] = idx;
+        } else {
+          mappingChanged = true;
+        }
+      }
+
+      // Add missing
+      if (Object.keys(nextMapping).length < nextCount) {
+        const occupied = new Set(Object.values(nextMapping));
+        const desired = getEvenlySpacedPointIndices(nextCount);
+        for (const sc of selectedCharms) {
+          if (nextMapping[sc.id] === undefined) {
+            let best = 0;
+            for (const d of desired) {
+              if (!occupied.has(d)) {
+                best = d;
+                break;
+              }
+            }
+            nextMapping[sc.id] = best;
+            occupied.add(best);
+            mappingChanged = true;
+          }
+        }
+      }
+
+      if (mappingChanged) {
+        setCharmPointIndexById(nextMapping);
+      }
+    }
+  }, [selectedCharms, charmPointIndexById, getEvenlySpacedPointIndices, persistedCharmPositions, reorderCharms, snapPoints.length]);
 
   // Zoom parameters
   const MAX_ZOOM = 3.0;
@@ -98,6 +205,21 @@ export default function PreviewCanvas() {
   const canZoomIn = zoom < MAX_ZOOM - 0.0001;
   const canZoomOut = zoom > MIN_ZOOM + 0.0001;
   const canPan = zoom > 1.0001;
+  const canDragCharmsInPreview = zoom <= 1.0001;
+
+  // If user zooms in, disable charm dragging entirely (so pan/zoom gestures work as expected)
+  useEffect(() => {
+    if (!canDragCharmsInPreview && draggingCharmId) {
+      setDraggingCharmId(null);
+      setHoverPointIndex(null);
+      dragOffsetRef.current = null;
+    }
+  }, [canDragCharmsInPreview, draggingCharmId]);
+
+  // Sync charm positions to global store
+  useEffect(() => {
+    updateCharmPositions(charmPointIndexById);
+  }, [charmPointIndexById, updateCharmPositions]);
 
   // Clamp pan to prevent dragging outside visible bounds
   const clampPan = useMemo(() => {
@@ -113,6 +235,141 @@ export default function PreviewCanvas() {
   }, [viewportSize.h, viewportSize.w]);
 
   const clampedPan = useMemo(() => clampPan(pan, zoom), [clampPan, pan, zoom]);
+
+  const getActiveViewportEl = useCallback(() => {
+    return (isExpanded ? expandedViewportRef.current : viewportRef.current) ?? null;
+  }, [isExpanded]);
+
+  const getBaseCoordsFromEvent = useCallback(
+    (clientX: number, clientY: number) => {
+      const el = getActiveViewportEl();
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+
+      // Pointer position in viewport pixel space
+      const px = clientX - rect.left;
+      const py = clientY - rect.top;
+
+      // Undo pan (pan is applied in screen pixel space)
+      const scaledX = px - clampedPan.x;
+      const scaledY = py - clampedPan.y;
+
+      // Undo zoom (zoom is applied around viewport center)
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const origX = cx + (scaledX - cx) / zoom;
+      const origY = cy + (scaledY - cy) / zoom;
+
+      // Convert to 800x350 design space
+      const baseX = (origX / rect.width) * 800;
+      const baseY = (origY / rect.height) * 350;
+      return { baseX, baseY };
+    },
+    [clampedPan.x, clampedPan.y, getActiveViewportEl, zoom]
+  );
+
+  const getNearestPointIndexFromBase = useCallback((baseX: number, baseY: number) => {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < snapPoints.length; i++) {
+      const p = snapPoints[i];
+      const dx = p.x - baseX;
+      const dy = p.y - baseY;
+      const d = dx * dx + dy * dy;
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }, [snapPoints]);
+
+  const getNearestPointIndexFromEvent = useCallback(
+    (clientX: number, clientY: number, offset?: { dx: number; dy: number } | null) => {
+      const coords = getBaseCoordsFromEvent(clientX, clientY);
+      if (!coords) return null;
+      const baseX = coords.baseX - (offset?.dx ?? 0);
+      const baseY = coords.baseY - (offset?.dy ?? 0);
+      return getNearestPointIndexFromBase(baseX, baseY);
+    },
+    [getBaseCoordsFromEvent, getNearestPointIndexFromBase]
+  );
+
+  const commitDragToPoint = useCallback(
+    (dragId: string, target: number | null) => {
+      if (typeof target !== 'number') return;
+
+      const prev = charmPointIndexByIdRef.current;
+      const from = prev[dragId];
+      if (from == null) return;
+      if (from === target) return;
+
+      let swapId: string | null = null;
+      for (const [id, idx] of Object.entries(prev)) {
+        if (id !== dragId && idx === target) {
+          swapId = id;
+          break;
+        }
+      }
+
+      const nextMapping: Record<string, number> = { ...prev, [dragId]: target };
+      if (swapId) nextMapping[swapId] = from;
+
+      setCharmPointIndexById(nextMapping);
+
+      // Update store order so the reorder strip stays consistent with left->right positions
+      const nextOrder = [...selectedCharms].sort(
+        (a, b) => (nextMapping[a.id] ?? 0) - (nextMapping[b.id] ?? 0)
+      );
+      reorderCharms(nextOrder);
+    },
+    [reorderCharms, selectedCharms]
+  );
+
+  const getCharmPointIndex = useCallback(
+    (selectedCharm: SelectedCharm, fallbackIndex: number) => {
+      return charmPointIndexByIdRef.current[selectedCharm.id] ?? fallbackIndex;
+    },
+    []
+  );
+
+  const pickNearestCharmId = useCallback(
+    (baseX: number, baseY: number) => {
+      if (selectedCharms.length === 0) return null;
+
+      // Only pick a charm if the click is reasonably close to one (avoid accidental drags on empty space)
+      const CLICK_RADIUS = 95; // in 800x350 design space; roughly a bit bigger than half charm width
+      const CLICK_RADIUS2 = CLICK_RADIUS * CLICK_RADIUS;
+
+      const defaultEven = getEvenlySpacedPointIndices(totalCharms);
+      let bestId: string | null = null;
+      let bestDist = Infinity;
+
+      for (let i = 0; i < selectedCharms.length; i++) {
+        const sc = selectedCharms[i];
+        const fallbackPointIndex = defaultEven[i] ?? defaultEven[defaultEven.length - 1] ?? 0;
+        const pointIndex = getCharmPointIndex(sc, fallbackPointIndex);
+        const p = snapPoints[pointIndex] ?? snapPoints[fallbackPointIndex] ?? snapPoints[0];
+        const dx = p.x - baseX;
+        const dy = p.y - baseY;
+        const d = dx * dx + dy * dy;
+        if (d < bestDist) {
+          bestDist = d;
+          bestId = sc.id;
+        }
+      }
+
+      if (bestId && bestDist <= CLICK_RADIUS2) return bestId;
+      return null;
+    },
+    [getCharmPointIndex, getEvenlySpacedPointIndices, selectedCharms, totalCharms]
+  );
+
+  const selectedCharmsDisplay = useMemo(() => {
+    // Show charms in left-to-right order (by point index)
+    const mapping = charmPointIndexByIdRef.current;
+    return [...selectedCharms].sort((a, b) => (mapping[a.id] ?? 0) - (mapping[b.id] ?? 0));
+  }, [selectedCharms]);
 
   const handleZoomIn = () => {
     setZoom((z) => {
@@ -284,9 +541,56 @@ export default function PreviewCanvas() {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          onPointerDown={(e) => {
+            if (!canDragCharmsInPreview) return;
+            if (selectedCharms.length === 0) return;
+
+            const coords = getBaseCoordsFromEvent(e.clientX, e.clientY);
+            if (!coords) return;
+
+            const pickedId = pickNearestCharmId(coords.baseX, coords.baseY);
+            if (!pickedId) return;
+
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+
+            // Compute grab offset from the picked charm's current center to the pointer
+            const fallbackEven = getEvenlySpacedPointIndices(totalCharms);
+            const pickedIndex = selectedCharms.findIndex((sc) => sc.id === pickedId);
+            const pickedFallbackPointIndex =
+              pickedIndex >= 0 ? (fallbackEven[pickedIndex] ?? fallbackEven[fallbackEven.length - 1] ?? 0) : 0;
+            const pickedPointIndex =
+              charmPointIndexByIdRef.current[pickedId] ?? pickedFallbackPointIndex;
+            const pickedPoint =
+              snapPoints[pickedPointIndex] ?? snapPoints[pickedFallbackPointIndex] ?? snapPoints[0];
+
+            dragOffsetRef.current = {
+              dx: coords.baseX - pickedPoint.x,
+              dy: coords.baseY - pickedPoint.y,
+            };
+
+            setDraggingCharmId(pickedId);
+            const idx = getNearestPointIndexFromEvent(e.clientX, e.clientY, dragOffsetRef.current);
+            setHoverPointIndex(idx);
+          }}
+          onPointerMove={(e) => {
+            if (!canDragCharmsInPreview) return;
+            if (!draggingCharmId) return;
+            const idx = getNearestPointIndexFromEvent(e.clientX, e.clientY, dragOffsetRef.current);
+            setHoverPointIndex(idx);
+          }}
+          onPointerUp={(e) => {
+            if (!canDragCharmsInPreview) return;
+            if (!draggingCharmId) return;
+            const target = getNearestPointIndexFromEvent(e.clientX, e.clientY, dragOffsetRef.current);
+            commitDragToPoint(draggingCharmId, target);
+            setDraggingCharmId(null);
+            setHoverPointIndex(null);
+            dragOffsetRef.current = null;
+          }}
         >
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0"
             style={{
               transform: `scale(${zoom})`,
               transformOrigin: '50% 50%',
@@ -294,7 +598,13 @@ export default function PreviewCanvas() {
           >
             <AnimatePresence>
               {selectedCharms.map((selectedCharm, index) => {
-                const position = charmPositions[index];
+                const defaultEven = getEvenlySpacedPointIndices(totalCharms);
+                const fallbackPointIndex = defaultEven[index] ?? defaultEven[defaultEven.length - 1] ?? 0;
+                const pointIndex =
+                  draggingCharmId === selectedCharm.id && hoverPointIndex != null
+                    ? hoverPointIndex
+                    : charmPointIndexById[selectedCharm.id] ?? fallbackPointIndex;
+                const position = snapPoints[pointIndex];
                 if (!position) return null;
 
                 return (
@@ -316,11 +626,13 @@ export default function PreviewCanvas() {
                       left: { type: 'spring', stiffness: 300, damping: 30 },
                       top: { type: 'spring', stiffness: 300, damping: 30 },
                     }}
-                    className="absolute z-10"
+                    className="absolute z-10 pointer-events-none"
                     style={{
                       width: '18.75%',
                       aspectRatio: '1 / 1',
-                      transform: 'translateX(-50%)',
+                      // Use CSS `translate` (not `transform`) so it composes with Framer Motion's transform
+                      // and keeps the charm centered on the anchor point (fixes mouse/charm offset).
+                      translate: '-50% -50%',
                     }}
                   >
                     <div className="relative w-full h-full pointer-events-none">
@@ -392,47 +704,45 @@ export default function PreviewCanvas() {
 
       {selectedCharms.length > 0 && (
         <div className="mt-2 pt-3 border-t border-gray-100">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2">
-            {language === 'nl' ? 'Sleep om volgorde te wijzigen' : 'Drag to reorder charms'}
+          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-3">
+            {language === 'nl' ? 'Geselecteerde charms' : 'Selected charms'}
           </p>
-          <Reorder.Group
-            axis="x"
-            values={selectedCharms}
-            onReorder={reorderCharms}
-            layout
-            className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
-          >
-            {selectedCharms.map((item) => (
-              <Reorder.Item
-                key={item.id}
-                value={item}
-                layout
-                className="flex-shrink-0 group relative"
-              >
-                <div className="w-12 h-12 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-1 relative cursor-grab active:cursor-grabbing">
-                  <div className="absolute top-0 left-0 w-full h-full bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                    <GripVertical className="w-4 h-4 text-gray-400" />
+          <div className="flex flex-wrap gap-2 pt-2">
+            {selectedCharmsDisplay.map((item) => (
+              <div key={item.id} className="group relative">
+                <div className="w-16 bg-gray-50 rounded-lg border border-gray-200 flex flex-col items-center p-1.5 relative hover:bg-white hover:shadow-sm transition-all">
+                  <div className="w-10 h-10 relative mb-1">
+                    <Image
+                      src={getCharmImageUrl(item.charm)}
+                      alt={item.charm.name}
+                      fill
+                      className="object-contain"
+                      sizes="40px"
+                    />
                   </div>
-                  <Image
-                    src={getCharmImageUrl(item.charm)}
-                    alt={item.charm.name}
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
+                  <div className="text-center w-full px-0.5">
+                    <p className="text-[9px] font-bold text-gray-600 mb-0.5 leading-tight">
+                      Charm
+                    </p>
+                    <p className="text-[12px] font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent leading-none">
+                      €{item.charm.price.toFixed(2)}
+                    </p>
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       removeCharm(item.id);
                     }}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-30"
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-md z-30 hover:bg-red-600"
+                    aria-label={`Remove ${item.charm.name}`}
+                    type="button"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-2.5 h-2.5" />
                   </button>
                 </div>
-              </Reorder.Item>
+              </div>
             ))}
-          </Reorder.Group>
+          </div>
         </div>
       )}
     </div>

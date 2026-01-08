@@ -30,28 +30,35 @@ export default function Toast({ toast, onClose }: ToastProps) {
       {toast && (
         <motion.div
           initial={{ opacity: 0, y: -50, x: '-50%' }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+          animate={{ opacity: 1, y: 0, x: '-50%' }}
+          exit={{ opacity: 0, y: -20, x: '-50%' }}
+          className="fixed top-6 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-lg pointer-events-none"
         >
           <div
-            className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${
+            className={`pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
               toast.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+                ? 'bg-green-600/90 border-green-400 text-white'
+                : 'bg-red-600/90 border-red-400 text-white'
             }`}
           >
-            {toast.type === 'success' ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <XCircle className="w-5 h-5" />
-            )}
-            <span className="font-medium">{toast.message}</span>
+            <div className="flex-shrink-0">
+              {toast.type === 'success' ? (
+                <CheckCircle className="w-6 h-6" />
+              ) : (
+                <XCircle className="w-6 h-6" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-base sm:text-lg text-center">
+                {toast.message}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="ml-2 hover:opacity-80 transition-opacity"
+              className="flex-shrink-0 p-1 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close notification"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </motion.div>
