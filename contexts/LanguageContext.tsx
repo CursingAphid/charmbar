@@ -18,7 +18,7 @@ const translations = {
     'nav.home': 'Home',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
-    
+
     // Home page
     'home.hero.title': 'Create Your Perfect',
     'home.hero.subtitle': 'Charm Bracelet',
@@ -41,7 +41,7 @@ const translations = {
     'home.howItWorks.step3.description': 'Review your creation and proceed to checkout.',
     'home.howItWorks.step4.title': 'Shipped!',
     'home.howItWorks.step4.description': 'We will carefully package and ship your unique bracelet.',
-    
+
     // Charms page
     'charms.title': 'Choose Your Charms',
     'charms.description': 'Select up to 7 charms and arrange them in the order you want',
@@ -65,7 +65,7 @@ const translations = {
     'charms.selected.title': 'Selected Charms',
     'charms.selected.charm': 'charm',
     'charms.selected.charms': 'charms',
-    
+
     // Cart
     'cart.title': 'Shopping Cart',
     'cart.empty': 'Your cart is empty',
@@ -75,19 +75,52 @@ const translations = {
     'cart.total': 'Total',
     'cart.checkout': 'Proceed to Checkout',
     'cart.remove': 'Remove',
-    
+
     // Checkout
     'checkout.title': 'Checkout',
     'checkout.success.title': 'Order Placed Successfully!',
     'checkout.success.description': 'Thank you for your order. We\'ll send you a confirmation email shortly.',
     'checkout.success.button': 'Continue Shopping',
+
+    // User Menu
+    'menu.orders': 'Your Orders',
+    'menu.signout': 'Sign Out',
+    'menu.login': 'Login',
+
+    // Auth
+    'auth.welcome': 'Welcome Back',
+    'auth.join': 'Join Us',
+    'auth.signin.desc': 'Sign in to access your orders',
+    'auth.signup.desc': 'Create an account to track your orders',
+    'auth.email': 'Email address',
+    'auth.password': 'Password',
+    'auth.fullname': 'Full Name',
+    'auth.submit.signin': 'Sign In',
+    'auth.submit.signup': 'Create Account',
+    'auth.google': 'Continue with Google',
+    'auth.or': 'Or continue with',
+    'auth.toggle.signup': "Don't have an account? Sign up",
+    'auth.toggle.signin': 'Already have an account? Sign in',
+    'auth.error': 'Something went wrong. Please try again.',
+    'auth.success': 'Account created! Please check your email to confirm.',
+
+    // Orders
+    'orders.title': 'Your Orders',
+    'orders.order': 'Order',
+    'orders.date': 'Date',
+    'orders.total': 'Total',
+    'orders.status': 'Status',
+    'orders.items': 'Items',
+    'orders.empty': 'No orders found',
+    'orders.empty.desc': 'You haven\'t placed any orders yet.',
+    'orders.shop_now': 'Start Shopping',
   },
   nl: {
     // Navbar
     'nav.home': 'Home',
     'nav.cart': 'Winkelwagen',
     'nav.language': 'Taal',
-    
+
     // Home page
     'home.hero.title': 'Creëer Je Perfecte',
     'home.hero.subtitle': 'Charm Armband',
@@ -110,7 +143,7 @@ const translations = {
     'home.howItWorks.step3.description': 'Bekijk je creatie en ga door naar afrekenen.',
     'home.howItWorks.step4.title': 'Verzonden!',
     'home.howItWorks.step4.description': 'Wij verpakken en verzenden je unieke armband met zorg.',
-    
+
     // Charms page
     'charms.title': 'Kies Je Charms',
     'charms.description': 'Selecteer maximaal 7 charms en zet ze in de volgorde die je wilt',
@@ -125,7 +158,7 @@ const translations = {
     'charms.summary.charms_plural': 'charms',
     'charms.summary.total': 'Totaal:',
     'charms.button.add': 'Voeg Charms Toe Om Door Te Gaan',
-    'charms.button.cart': 'Toevoegen Aan Winkelwagen',
+    'charms.button.cart': 'Toevoegen',
     'charms.noResults': 'Geen charms gevonden die overeenkomen met je zoekopdracht.',
     'charms.selected': 'geselecteerd',
     'charms.limitReached': 'Maximaal 7 charms toegestaan',
@@ -134,7 +167,7 @@ const translations = {
     'charms.selected.title': 'Geselecteerde Charms',
     'charms.selected.charm': 'charm',
     'charms.selected.charms': 'charms',
-    
+
     // Cart
     'cart.title': 'Winkelwagen',
     'cart.empty': 'Je winkelwagen is leeg',
@@ -144,12 +177,45 @@ const translations = {
     'cart.total': 'Totaal',
     'cart.checkout': 'Ga Naar Kassa',
     'cart.remove': 'Verwijderen',
-    
+
     // Checkout
     'checkout.title': 'Afrekenen',
     'checkout.success.title': 'Bestelling Succesvol Geplaatst!',
     'checkout.success.description': 'Bedankt voor je bestelling. We sturen je binnenkort een bevestigingsmail.',
     'checkout.success.button': 'Verder Winkelen',
+
+    // User Menu
+    'menu.orders': 'Jouw Bestellingen',
+    'menu.signout': 'Uitloggen',
+    'menu.login': 'Inloggen',
+
+    // Auth
+    'auth.welcome': 'Welkom Terug',
+    'auth.join': 'Doe Mee',
+    'auth.signin.desc': 'Log in om je bestellingen te bekijken',
+    'auth.signup.desc': 'Maak een account aan om je bestellingen te volgen',
+    'auth.email': 'E-mailadres',
+    'auth.password': 'Wachtwoord',
+    'auth.fullname': 'Volledige Naam',
+    'auth.submit.signin': 'Inloggen',
+    'auth.submit.signup': 'Account Aanmaken',
+    'auth.google': 'Verder met Google',
+    'auth.or': 'Of ga verder met',
+    'auth.toggle.signup': 'Nog geen account? Meld je aan',
+    'auth.toggle.signin': 'Heb je al een account? Log in',
+    'auth.error': 'Er is iets misgegaan. Probeer het opnieuw.',
+    'auth.success': 'Account aangemaakt! Controleer je e-mail ter bevestiging.',
+
+    // Orders
+    'orders.title': 'Jouw Bestellingen',
+    'orders.order': 'Bestelling',
+    'orders.date': 'Datum',
+    'orders.total': 'Totaal',
+    'orders.status': 'Status',
+    'orders.items': 'Artikelen',
+    'orders.empty': 'Geen bestellingen gevonden',
+    'orders.empty.desc': 'Je hebt nog geen bestellingen geplaatst.',
+    'orders.shop_now': 'Begin met Winkelen',
   },
 };
 

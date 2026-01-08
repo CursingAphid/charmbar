@@ -34,6 +34,9 @@ export default function PreviewCanvas() {
   const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
   const dragOffsetRef = useRef<{ dx: number; dy: number } | null>(null); // in 800x350 design space
   const prevCharmCountRef = useRef<number>(0);
+  // Once the user manually moves a charm (or we hydrate a saved design), we stop auto-reflowing
+  // all charms on every add/remove. New charms will be placed into the next available empty slot.
+  const layoutLockedRef = useRef<boolean>(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -80,6 +83,7 @@ export default function PreviewCanvas() {
     if (nextCount === 0) {
       if (Object.keys(charmPointIndexById).length > 0) setCharmPointIndexById({});
       prevCharmCountRef.current = 0;
+      layoutLockedRef.current = false;
       return;
     }
 
@@ -113,6 +117,8 @@ export default function PreviewCanvas() {
         }
       }
       setCharmPointIndexById(fromPersisted);
+      // Treat hydrated designs as "manual" so adding charms doesn't destroy the saved layout.
+      layoutLockedRef.current = true;
       // Keep order aligned left->right
       const nextStoreOrder = [...selectedCharms].sort(
         (a, b) => (fromPersisted[a.id] ?? 0) - (fromPersisted[b.id] ?? 0)
@@ -128,7 +134,59 @@ export default function PreviewCanvas() {
 
     if (countChanged) {
       const prevMapping = charmPointIndexByIdRef.current;
-      
+
+      // If the user has manually adjusted the layout, DO NOT reflow existing charms.
+      // Only assign positions for new charms into empty slots.
+      if (layoutLockedRef.current && Object.keys(prevMapping).length > 0) {
+        const currentIds = new Set(selectedCharms.map((sc) => sc.id));
+        const nextMapping: Record<string, number> = {};
+
+        // Keep existing positions (and drop removed)
+        for (const [id, idx] of Object.entries(prevMapping)) {
+          if (currentIds.has(id) && typeof idx === 'number') {
+            nextMapping[id] = idx;
+          }
+        }
+
+        const occupied = new Set<number>(Object.values(nextMapping));
+        const desired = getEvenlySpacedPointIndices(nextCount);
+
+        // Place any new charms into an available slot (prefer an evenly-spaced desired index if free)
+        for (const sc of selectedCharms) {
+          if (nextMapping[sc.id] !== undefined) continue;
+
+          let best: number | null = null;
+          for (const d of desired) {
+            if (!occupied.has(d)) {
+              best = d;
+              break;
+            }
+          }
+          if (best == null) {
+            for (let i = 0; i < snapPointCount; i++) {
+              if (!occupied.has(i)) {
+                best = i;
+                break;
+              }
+            }
+          }
+          nextMapping[sc.id] = best ?? 0;
+          occupied.add(nextMapping[sc.id]);
+        }
+
+        setCharmPointIndexById(nextMapping);
+
+        // Keep the reorder strip/store order aligned with left→right point positions
+        const nextStoreOrder = [...selectedCharms].sort(
+          (a, b) => (nextMapping[a.id] ?? 0) - (nextMapping[b.id] ?? 0)
+        );
+        const orderChanged = nextStoreOrder.some((sc, i) => sc.id !== selectedCharms[i].id);
+        if (orderChanged) {
+          reorderCharms(nextStoreOrder);
+        }
+        return;
+      }
+
       // Preserve prior left-to-right order (by previous point index) when reflowing
       const ordered = [...selectedCharms].sort((a, b) => {
         const ai = prevMapping[a.id];
@@ -303,6 +361,9 @@ export default function PreviewCanvas() {
       const from = prev[dragId];
       if (from == null) return;
       if (from === target) return;
+
+      // User manually moved a charm — lock layout so future adds don't auto-reflow everything.
+      layoutLockedRef.current = true;
 
       let swapId: string | null = null;
       for (const [id, idx] of Object.entries(prev)) {
@@ -519,6 +580,7 @@ export default function PreviewCanvas() {
       className="w-full max-w-[1000px] aspect-[800/350] rounded-lg overflow-hidden bg-gray-50 relative"
     >
       <motion.div
+        id="preview-canvas-container"
         key={selectedBracelet.id}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}

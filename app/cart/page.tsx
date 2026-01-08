@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
-import Navbar from '@/components/Navbar';
 import CartItem from '@/components/CartItem';
 import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
@@ -17,7 +16,6 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <div className="min-h-screen">
-        <Navbar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -41,7 +39,6 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
 
       {/* Bottom padding on mobile so the fixed checkout bar never covers content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-32 sm:pb-8">
@@ -58,7 +55,7 @@ export default function CartPage() {
                 {cart.length} item{cart.length !== 1 ? 's' : ''} in your cart
               </p>
             </div>
-            <Link href="/">
+            <Link href="/charms">
               <Button size="sm" className="flex items-center">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Continue Shopping

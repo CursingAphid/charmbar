@@ -257,7 +257,7 @@ export default function Charm3DIcon({
     >
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <LoadingSpinner size="md" color="#ec4899" />
+          <LoadingSpinner size="md" color="#eab308" />
         </div>
       )}
       <Canvas

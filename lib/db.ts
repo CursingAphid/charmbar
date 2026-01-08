@@ -15,8 +15,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export { bufferFromByteaField, byteaHexFromBase64 };
-
 // Database interfaces
 export interface Bracelet {
   id: string;
@@ -24,8 +22,8 @@ export interface Bracelet {
   description: string;
   price: number;
   image: string;
-  openImage?: string;
-  grayscale?: boolean;
+  "openImage": string; // matching DB column "openImage"
+  grayscale: boolean;
   color: string;
   material: string;
 }
@@ -35,117 +33,47 @@ export interface Charm {
   name: string;
   description: string;
   price: number;
-  category: string; // For backward compatibility
-  tags?: string[]; // Array of tag names
-  background_id?: string; // Reference to background record (new API system)
-  image_data?: string; // Base64 encoded image data
-  image_filename?: string;
-  image_mimetype?: string;
-  glb_data?: string; // Base64 encoded GLB data
-  glb_filename?: string;
-  glb_mimetype?: string;
-  background_data?: string; // Base64 encoded background data (legacy)
-  background_filename?: string;
-  background_mimetype?: string;
+  category: string;
+
+  // New schema fields
+  image_url: string;
+  glb_url: string;
+
+  background_id?: number | string;
+  tags?: string[];
   created_at?: string;
   updated_at?: string;
-
-  // Legacy compatibility fields
-  image?: string;
-  icon3d?: string;
-  glbPath?: string;
-  background?: string;
 }
 
-// Helper functions for creating image URLs from binary data
+// Helper functions for creating image URLs
 export function getCharmImageUrl(charm: Charm): string {
-  if (charm.image_data) {
-    // Create data URL from binary data
-    const buffer = bufferFromByteaField(charm.image_data);
-    const base64 = buffer.toString('base64');
-    return `data:${charm.image_mimetype};base64,${base64}`;
-  }
-  // Prefer on-demand API fetch to avoid loading BYTEA blobs in list queries
-  return `/api/charm-image/${charm.id}`;
+  // Directly return the URL from Supabase Storage
+  return charm.image_url || '';
 }
 
 export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
-  // Check if charm has a background_id (new API system)
   if (charm.background_id) {
-    // IMPORTANT: Don't pre-fetch here.
-    // The returned URL will be requested by the browser when used as a CSS background,
-    // so pre-fetching would cause a double request and make the UI feel laggy.
-    return `/api/charm-background/${charm.id}`;
+    const background = await getBackgroundById(String(charm.background_id));
+    return background?.image_url || null;
   }
-
-  // Fallback to legacy background data (for backward compatibility)
-  if (charm.background_data) {
-    const buffer = bufferFromByteaField(charm.background_data);
-    const base64 = buffer.toString('base64');
-    return `data:${charm.background_mimetype || 'image/png'};base64,${base64}`;
-  }
-
   return null;
 }
 
-// Cache for GLB blob URLs to avoid repeated conversions
-const glbCache = new Map<string, string>();
-
 export function getCharmGlbUrl(charm: Charm): string | undefined {
-  if (charm.glb_data) {
-    // Use cached blob URL if available
-    if (glbCache.has(charm.id)) {
-      return glbCache.get(charm.id);
-    }
-
-    try {
-      // Convert bytea hex data to Buffer, then create blob URL (much more efficient than data URLs)
-      const buffer = bufferFromByteaField(charm.glb_data);
-      const mimeType = charm.glb_mimetype || 'model/gltf-binary';
-
-      // Create blob and blob URL for better performance
-      if (typeof window !== 'undefined') {
-        const uint8Array = new Uint8Array(buffer);
-        const blob = new Blob([uint8Array], { type: mimeType });
-        const blobUrl = URL.createObjectURL(blob);
-        glbCache.set(charm.id, blobUrl);
-        return blobUrl;
-      }
-
-      // Fallback to data URL for server-side rendering
-      const base64 = buffer.toString('base64');
-      return `data:${mimeType};base64,${base64}`;
-    } catch (error) {
-      console.error('Error converting GLB data for charm:', charm.id, error);
-      return undefined;
-    }
-  }
-
-  // Prefer on-demand API fetch (keeps list queries small)
-  if (typeof window !== 'undefined') {
-    return `/api/charm-glb/${charm.id}`;
-  }
-  return undefined;
+  return charm.glb_url || undefined;
 }
 
-// Function to clean up blob URLs when component unmounts
+// No cleanup needed for direct URLs
 export function cleanupCharmGlbUrl(charmId: string): void {
-  if (glbCache.has(charmId)) {
-    const blobUrl = glbCache.get(charmId);
-    if (blobUrl && blobUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(blobUrl);
-    }
-    glbCache.delete(charmId);
-  }
+  // no-op
 }
 
 // Background functions
+// Background functions
 export interface Background {
-  id: string;
+  id: string; // Changed to string/number flexibility or strict matches
   name: string;
-  image_data?: string;
-  image_filename?: string;
-  image_mimetype?: string;
+  image_url: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -189,20 +117,15 @@ export async function getBackgroundById(id: string): Promise<Background | null> 
   }
 }
 
-// Function to download GLB file from binary data
+// Function to download GLB file from URL
 export function downloadCharmGlb(charm: Charm): void {
-  if (charm.glb_data && typeof window !== 'undefined') {
-    const buffer = bufferFromByteaField(charm.glb_data);
-    const blob = new Blob([new Uint8Array(buffer)], { type: charm.glb_mimetype || 'model/gltf-binary' });
-    const url = URL.createObjectURL(blob);
-
+  if (charm.glb_url && typeof window !== 'undefined') {
     const link = document.createElement('a');
-    link.href = url;
-    link.download = charm.glb_filename || 'model.glb';
+    link.href = charm.glb_url;
+    link.download = `${charm.name}.glb`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   }
 }
 
@@ -224,13 +147,10 @@ export async function getBracelets(): Promise<Bracelet[]> {
 
 export async function getCharms(): Promise<Charm[]> {
   try {
-    // IMPORTANT: Do NOT select BYTEA blobs (image_data/glb_data) here.
-    // They can be huge and cause PostgREST statement timeouts.
-    // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id,
+        id, name, description, price, category, background_id, image_url, glb_url,
         charm_tags (
           tags (
             name
@@ -238,7 +158,7 @@ export async function getCharms(): Promise<Charm[]> {
         )
       `)
       .order('created_at', { ascending: false })
-      .limit(10); // Add limit to prevent large result sets
+      .limit(50);
 
     if (error) throw error;
 
@@ -264,7 +184,7 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id,
+        id, name, description, price, category, background_id, image_url, glb_url,
         charm_tags (
           tags (
             name
@@ -318,14 +238,11 @@ export async function getCharmsByTag(tagName: string): Promise<Charm[]> {
       return [];
     }
 
-    // IMPORTANT: Do NOT select BYTEA blobs (image_data/glb_data) here.
-    // They can be huge and cause PostgREST statement timeouts.
-    // Images/GLBs are fetched on-demand via /api/charm-image/:id and /api/charm-glb/:id.
     const { data, error } = await supabase
       .from('charm_tags')
       .select(`
         charms (
-          id, name, description, price, background_id
+          id, name, description, price, background_id, image_url, glb_url
         )
       `)
       .eq('tag_id', tagData.id);
@@ -334,12 +251,8 @@ export async function getCharmsByTag(tagName: string): Promise<Charm[]> {
 
     // Transform the data to match Charm interface
     const charms: Charm[] = data?.map((item: any) => ({
-      id: item.charms?.id,
-      name: item.charms?.name,
-      description: item.charms?.description,
-      price: item.charms?.price,
-      background_id: item.charms?.background_id,
-      category: tagName, // For backward compatibility in filtering
+      ...item.charms,
+      category: tagName,
     })) || [];
 
     return charms;
@@ -364,7 +277,7 @@ export async function getCharmById(id: string): Promise<Charm | null> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id,
+        id, name, description, price, category, background_id, image_url, glb_url,
         charm_tags (
           tags (
             name
@@ -388,7 +301,7 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id,
+        id, name, description, price, category, background_id, image_url, glb_url,
         charm_tags (
           tags (
             name

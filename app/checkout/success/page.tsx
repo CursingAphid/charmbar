@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import { CheckCircle, ShoppingBag, Home } from 'lucide-react';
@@ -9,7 +8,6 @@ import { CheckCircle, ShoppingBag, Home } from 'lucide-react';
 export default function CheckoutSuccessPage() {
   return (
     <div className="min-h-screen">
-      <Navbar />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <motion.div
@@ -52,18 +50,26 @@ export default function CheckoutSuccessPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-row gap-2 justify-center"
           >
             <Link href="/">
-              <Button variant="primary" size="lg" className="flex items-center gap-2">
-                <Home className="w-5 h-5" />
-                Back to Home
+              <Button variant="primary" size="md" className="flex flex-col items-center gap-1 px-3 py-2 text-sm sm:flex-row sm:gap-2 sm:px-6 sm:py-4 sm:text-base sm:size-lg">
+                <Home className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-center sm:text-left">
+                  <span className="sm:hidden">Back to<br /></span>
+                  <span className="hidden sm:inline">Back to </span>
+                  Home
+                </span>
               </Button>
             </Link>
-            <Link href="/">
-              <Button variant="outline" size="lg" className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5" />
-                Shop More
+            <Link href="/charms">
+              <Button variant="outline" size="md" className="flex flex-col items-center gap-1 px-3 py-2 text-sm sm:flex-row sm:gap-2 sm:px-6 sm:py-4 sm:text-base sm:size-lg">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-center sm:text-left">
+                  <span className="sm:hidden">Shop<br /></span>
+                  <span className="hidden sm:inline">Shop </span>
+                  More
+                </span>
               </Button>
             </Link>
           </motion.div>

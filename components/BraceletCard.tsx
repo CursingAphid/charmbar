@@ -19,7 +19,7 @@ export default function BraceletCard({ bracelet, isSelected, onSelect }: Bracele
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute top-2 right-2 z-10 bg-pink-500 text-white rounded-full p-1.5 shadow-lg"
+          className="absolute top-2 right-2 z-10 bg-yellow-500 text-white rounded-full p-1.5 shadow-lg"
         >
           <Check className="w-4 h-4" />
         </motion.div>
@@ -52,10 +52,10 @@ export default function BraceletCard({ bracelet, isSelected, onSelect }: Bracele
         <motion.div
           initial={{ height: 0 }}
           animate={{ height: 'auto' }}
-          className="overflow-hidden bg-pink-50 border-t border-pink-200"
+          className="overflow-hidden bg-yellow-50 border-t border-yellow-200"
         >
           <div className="p-3 text-center">
-            <span className="text-sm font-medium text-pink-700">Selected</span>
+            <span className="text-sm font-medium text-yellow-700">Selected</span>
           </div>
         </motion.div>
       )}

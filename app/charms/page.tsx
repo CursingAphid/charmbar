@@ -8,13 +8,14 @@ import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CharmCard from '@/components/CharmCard';
 import PreviewCanvas from '@/components/PreviewCanvas';
-import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingBag, X, ChevronDown, Info, Eye, Filter, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 import { getCharmGlbUrl } from '@/lib/db';
 import { useGLTF } from '@react-three/drei';
+import html2canvas from 'html2canvas';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CharmsPage() {
   const router = useRouter();
@@ -125,8 +126,8 @@ export default function CharmsPage() {
 
     // Sort by: Charms with backgrounds first, then by original order
     return [...filtered].sort((a, b) => {
-      const aHasBackground = !!a.background;
-      const bHasBackground = !!b.background;
+      const aHasBackground = !!a.background_id;
+      const bHasBackground = !!b.background_id;
 
       // Charms with backgrounds always come first
       if (aHasBackground && !bHasBackground) return -1;
@@ -160,17 +161,80 @@ export default function CharmsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading bracelet...</p>
         </div>
       </div>
     );
   }
 
-  const handleAddToCart = () => {
-    addToCart();
-    showToast('Added to cart!', 'success');
-    router.push('/cart');
+  const handleAddToCart = async () => {
+    setLoading(true); // Re-use loading state or create a specific one for "Adding to cart..."
+
+    try {
+      let previewUrl = undefined;
+      const element = document.getElementById('preview-canvas-container');
+
+      if (element) {
+        // Capture the canvas
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          backgroundColor: null, // Transparent background
+          scale: 2, // Higher quality
+          logging: false,
+        });
+
+        // Convert to blob
+        const blob = await new Promise<Blob | null>(resolve =>
+          canvas.toBlob(resolve, 'image/png')
+        );
+
+        if (blob) {
+          // Upload to Supabase
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+
+          // Allow anonymous uploads if needed, or structured by session ID/random ID if user not logged in
+          // For now, use a random ID if no user, or user ID
+          const userId = user?.id || 'anonymous';
+          const fileName = `${userId}/${Date.now()}-preview.png`;
+
+          const { data, error } = await supabase
+            .storage
+            .from('previews')
+            .upload(fileName, blob, {
+              contentType: 'image/png',
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (!error && data) {
+            // Get Public URL
+            const { data: { publicUrl } } = supabase
+              .storage
+              .from('previews')
+              .getPublicUrl(fileName);
+
+            previewUrl = publicUrl;
+          } else {
+            console.error('Error uploading preview:', error);
+          }
+        }
+      }
+
+      // Add to cart with the preview URL
+      addToCart(previewUrl);
+      showToast('Added to cart!', 'success');
+      router.push('/cart');
+    } catch (err) {
+      console.error('Error capturing preview:', err);
+      // Fallback: add to cart without preview
+      addToCart();
+      showToast('Added to cart (without preview)', 'success');
+      router.push('/cart');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategoryToggle = (category: string) => {
@@ -199,7 +263,6 @@ export default function CharmsPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
 
       {/* Extra bottom padding on mobile so the fixed bottom bar never covers content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-32 lg:pb-8">
@@ -233,7 +296,7 @@ export default function CharmsPage() {
                 const bracelet = bracelets.find((b) => b.id === e.target.value);
                 if (bracelet) setBracelet(bracelet);
               }}
-              className="w-full pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none appearance-none cursor-pointer text-gray-900 font-medium"
+              className="w-full pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none appearance-none cursor-pointer text-gray-900 font-medium"
             >
               {bracelets.map((bracelet) => (
                 <option key={bracelet.id} value={bracelet.id}>
@@ -258,7 +321,7 @@ export default function CharmsPage() {
                   placeholder={t('charms.search.placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none bg-white"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none bg-white"
                 />
                 {searchQuery && (
                   <button
@@ -277,18 +340,17 @@ export default function CharmsPage() {
                   onClick={() => {
                     setShowFilterDropdown(!showFilterDropdown);
                   }}
-                  className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-                    showFilterDropdown || !selectedCategories.includes('All')
-                      ? 'bg-amber-50 border-amber-300 text-amber-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
-                  }`}
+                  className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${showFilterDropdown || !selectedCategories.includes('All')
+                    ? 'bg-amber-50 border-amber-300 text-amber-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
+                    }`}
                   type="button"
                 >
                   <Filter className="w-4 h-4" />
                   <span className="text-sm font-medium">
                     {selectedCategories.includes('All') ? 'All Tags' :
-                     selectedCategories.length === 1 ? selectedCategories[0] :
-                     `${selectedCategories.length} Tags`}
+                      selectedCategories.length === 1 ? selectedCategories[0] :
+                        `${selectedCategories.length} Tags`}
                   </span>
                   <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -296,39 +358,37 @@ export default function CharmsPage() {
                 {/* Dropdown Menu */}
                 {showFilterDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                      <div className="py-2">
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          handleCategoryToggle('All');
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${selectedCategories.includes('All')
+                          ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
+                          : 'text-gray-700'
+                          }`}
+                        type="button"
+                      >
+                        All Tags
+                      </button>
+                      {charmCategories.filter(cat => cat !== 'All').map((category) => (
                         <button
+                          key={category}
                           onClick={() => {
-                            handleCategoryToggle('All');
+                            handleCategoryToggle(category);
                             setShowFilterDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${
-                            selectedCategories.includes('All')
-                              ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
-                              : 'text-gray-700'
-                          }`}
+                          className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${selectedCategories.includes(category)
+                            ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
+                            : 'text-gray-700'
+                            }`}
                           type="button"
                         >
-                          All Tags
+                          {category}
                         </button>
-                        {charmCategories.filter(cat => cat !== 'All').map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => {
-                              handleCategoryToggle(category);
-                              setShowFilterDropdown(false);
-                            }}
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors ${
-                              selectedCategories.includes(category)
-                                ? 'bg-[linear-gradient(90deg,rgba(255,242,197,0.9)_0%,rgba(212,175,55,0.22)_50%,rgba(255,242,197,0.9)_100%)] text-amber-900 font-semibold'
-                                : 'text-gray-700'
-                            }`}
-                            type="button"
-                          >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -344,11 +404,11 @@ export default function CharmsPage() {
                         'px-4 py-2 rounded-full text-sm font-medium transition-all',
                         selectedCategories.includes(category)
                           ? [
-                              // Metallic-ish gold gradient (multi-stop)
-                              "bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)]",
-                              'text-gray-900',
-                              'ring-1 ring-black/10',
-                            ].join(' ')
+                            // Metallic-ish gold gradient (multi-stop)
+                            "bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)]",
+                            'text-gray-900',
+                            'ring-1 ring-black/10',
+                          ].join(' ')
                           : 'bg-white text-gray-700 border border-gray-300 hover:border-amber-300 hover:text-amber-700',
                       ].join(' ')}
                       type="button"
@@ -524,8 +584,8 @@ export default function CharmsPage() {
                   </p>
                 </div>
 
-                <Button 
-                  onClick={handleAddToCart} 
+                <Button
+                  onClick={handleAddToCart}
                   size="sm"
                   className="flex-[1.8] flex items-center justify-center gap-2 h-11 px-4"
                 >

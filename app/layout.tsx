@@ -4,6 +4,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { OrientationHandler } from "@/components/OrientationHandler";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,7 +56,8 @@ export default function RootLayout({
           <LanguageProvider>
             <ToastProvider>
               <OrientationHandler />
-        {children}
+              <Navbar />
+              {children}
             </ToastProvider>
           </LanguageProvider>
         </div>

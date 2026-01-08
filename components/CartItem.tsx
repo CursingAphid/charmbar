@@ -168,7 +168,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                         <span className="text-sm font-bold text-gray-900 leading-tight">
                           {group.charm.name}
                           {group.quantity > 1 && (
-                            <span className="ml-1 text-pink-500 font-extrabold text-xs">
+                            <span className="ml-1 text-yellow-500 font-extrabold text-xs">
                               (×{group.quantity})
                             </span>
                           )}

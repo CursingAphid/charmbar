@@ -7,7 +7,6 @@ import { getCharmsWithBackgrounds, type Charm } from '@/lib/db';
 import { getCharmImageUrl } from '@/lib/db';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
-import Navbar from '@/components/Navbar';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,11 +14,11 @@ import { Sparkles, MousePointerClick, ShoppingBag, Truck, CheckCircle } from 'lu
 import Charm3DIcon from '@/components/Charm3DIcon';
 import { useToast } from '@/components/ToastProvider';
 
-function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: { 
-  charm: any; 
-  selectedCharms: any[]; 
-  addCharm: (c: any) => void; 
-  t: any; 
+function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, router }: {
+  charm: any;
+  selectedCharms: any[];
+  addCharm: (c: any) => void;
+  t: any;
   showToast: any;
   router: any;
 }) {
@@ -65,10 +64,10 @@ function FeaturedCharmCard({ charm, selectedCharms, addCharm, t, showToast, rout
   }, [isHovered, isInteracting]);
 
   return (
-    <Card 
+    <Card
       ref={cardRef}
-      key={charm.id} 
-      className="border border-pink-100 bg-white shadow-sm hover:shadow-md transition-shadow"
+      key={charm.id}
+      className="border border-yellow-100 bg-white shadow-sm hover:shadow-md transition-shadow"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -155,8 +154,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
-      
+
       {/* In-Progress Designing Bar */}
       <AnimatePresence>
         {selectedCharms.length > 0 && (
@@ -164,7 +162,7 @@ export default function Home() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-pink-600 text-white overflow-hidden sticky top-16 z-40"
+            className="bg-black text-white overflow-hidden sticky top-16 z-40"
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-center gap-3">
               <span className="text-sm md:text-base font-medium">
@@ -172,7 +170,7 @@ export default function Home() {
               </span>
               <button
                 onClick={() => router.push('/charms')}
-                className="bg-white text-pink-600 px-4 py-1 rounded-full text-sm font-bold hover:bg-pink-50 transition-colors"
+                className="bg-white text-black px-4 py-1 rounded-full text-sm font-bold hover:bg-gray-100 transition-colors"
               >
                 {t('home.inProgressButton')}
               </button>
@@ -180,12 +178,12 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Hero Section */}
       <section className="relative w-full h-[45vh] sm:h-[35vh] min-h-[350px] sm:min-h-[280px] flex items-center justify-center overflow-hidden">
         {/* Soft Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-purple-100 to-pink-50" />
-        
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-50" />
+
         {/* Floating Charm Silhouettes */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Heart Silhouettes */}
@@ -204,10 +202,10 @@ export default function Home() {
             }}
           >
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="opacity-25">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-pink-500" />
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-yellow-600" />
             </svg>
           </motion.div>
-          
+
           <motion.div
             className="absolute"
             style={{ left: '75%', top: '15%' }}
@@ -224,10 +222,10 @@ export default function Home() {
             }}
           >
             <svg width="120" height="120" viewBox="0 0 24 24" fill="none" className="opacity-20">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-purple-500" />
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-yellow-500" />
             </svg>
           </motion.div>
-          
+
           <motion.div
             className="absolute"
             style={{ left: '50%', top: '60%' }}
@@ -244,10 +242,10 @@ export default function Home() {
             }}
           >
             <svg width="60" height="60" viewBox="0 0 24 24" fill="none" className="opacity-30">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-pink-500" />
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" className="text-yellow-600" />
             </svg>
           </motion.div>
-          
+
           {/* Star Silhouettes */}
           <motion.div
             className="absolute"
@@ -265,10 +263,10 @@ export default function Home() {
             }}
           >
             <svg width="100" height="100" viewBox="0 0 24 24" fill="none" className="opacity-22">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" className="text-purple-500" />
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" className="text-yellow-500" />
             </svg>
           </motion.div>
-          
+
           <motion.div
             className="absolute"
             style={{ left: '80%', top: '45%' }}
@@ -285,10 +283,10 @@ export default function Home() {
             }}
           >
             <svg width="70" height="70" viewBox="0 0 24 24" fill="none" className="opacity-28">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" className="text-pink-500" />
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" className="text-yellow-600" />
             </svg>
           </motion.div>
-          
+
           {/* Snowflake Silhouettes */}
           <motion.div
             className="absolute"
@@ -305,11 +303,11 @@ export default function Home() {
             }}
           >
             <svg width="90" height="90" viewBox="0 0 24 24" fill="none" className="opacity-25">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-purple-500" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-purple-500" />
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-yellow-500" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-yellow-500" />
             </svg>
           </motion.div>
-          
+
           <motion.div
             className="absolute"
             style={{ left: '90%', top: '75%' }}
@@ -325,11 +323,11 @@ export default function Home() {
             }}
           >
             <svg width="65" height="65" viewBox="0 0 24 24" fill="none" className="opacity-30">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-pink-500" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-pink-500" />
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-yellow-600" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-yellow-600" />
             </svg>
           </motion.div>
-          
+
           <motion.div
             className="absolute"
             style={{ left: '30%', top: '10%' }}
@@ -345,12 +343,12 @@ export default function Home() {
             }}
           >
             <svg width="55" height="55" viewBox="0 0 24 24" fill="none" className="opacity-28">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-purple-500" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-purple-500" />
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" className="text-yellow-500" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" className="text-yellow-500" />
             </svg>
           </motion.div>
         </div>
-        
+
         {/* Hero Content */}
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-4 text-center flex flex-col items-center justify-center">
           <motion.div
@@ -359,16 +357,9 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="mb-6 sm:mb-6 flex justify-center"
           >
-            <Image
-              src="/images/charm_bazaar_logo.png?v=3"
-              alt="Charm Bazaar"
-              width={900}
-              height={550}
-              className="w-auto h-auto max-w-[85vw] sm:max-w-[95vw] md:max-w-[900px] drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
-              style={{ marginTop: '0', marginBottom: '0' }}
-              priority
-              unoptimized
-            />
+            <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 bg-clip-text text-transparent drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+              CHARM BAZAAR
+            </h1>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -389,7 +380,7 @@ export default function Home() {
       </section>
 
       {/* Featured Charms Section */}
-      <section className="py-12 bg-white/30 backdrop-blur-sm border-y border-pink-100">
+      <section className="py-12 bg-white/30 backdrop-blur-sm border-y border-yellow-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -403,7 +394,7 @@ export default function Home() {
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {t('home.featured.title')}
               </h2>
-              <Sparkles className="w-6 h-6 text-pink-500" />
+              <Sparkles className="w-6 h-6 text-yellow-500" />
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-8">
@@ -441,7 +432,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
             {/* Timeline Line (Desktop) */}
-            <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-pink-100 -z-0" />
+            <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-yellow-100 -z-0" />
 
             {/* Step 1 */}
             <motion.div
@@ -451,7 +442,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="relative z-10 text-center"
             >
-              <div className="w-24 h-24 bg-white border-4 border-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-pink-500">
+              <div className="w-24 h-24 bg-white border-4 border-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-yellow-500">
                 <MousePointerClick className="w-10 h-10" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{t('home.howItWorks.step1.title')}</h3>
@@ -481,7 +472,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="relative z-10 text-center"
             >
-              <div className="w-24 h-24 bg-white border-4 border-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-pink-500">
+              <div className="w-24 h-24 bg-white border-4 border-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-yellow-500">
                 <ShoppingBag className="w-10 h-10" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{t('home.howItWorks.step3.title')}</h3>

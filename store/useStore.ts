@@ -26,6 +26,7 @@ interface CartItem {
   charms: SelectedCharm[]; // Now stores instances
   charmPositions: Record<string, number>; // Maps charm instance ID to point index
   id: string;
+  previewImage?: string;
 }
 
 interface StoreState {
@@ -38,14 +39,15 @@ interface StoreState {
   // Actions
   setBracelet: (bracelet: Bracelet) => void;
   addCharm: (charm: Charm) => void;
-  removeCharm: (instanceId: string) => void;
-  reorderCharms: (newOrder: SelectedCharm[]) => void;
+  removeCharm: (id: string) => void;
+  reorderCharms: (charms: SelectedCharm[]) => void;
   updateCharmPositions: (positions: Record<string, number>) => void;
   setEditingCartItemId: (cartItemId: string | null) => void;
-  addToCart: () => void;
+  addToCart: (previewImage?: string) => void;
   removeFromCart: (cartItemId: string) => void;
   reorderCartItemCharms: (cartItemId: string, newCharmOrder: SelectedCharm[]) => void;
   clearSelection: () => void;
+  clearCart: () => void;
   getTotalPrice: () => number;
   getCartTotal: () => number;
   hasSelectedBracelet: () => boolean;
@@ -54,133 +56,139 @@ interface StoreState {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-  selectedBracelet: null, // No default bracelet - must be selected from database
-  selectedCharms: [],
-  charmPositions: {},
-  cart: [],
-  editingCartItemId: null,
+      selectedBracelet: null, // No default bracelet - must be selected from database
+      selectedCharms: [],
+      charmPositions: {},
+      cart: [],
+      editingCartItemId: null,
 
-  setBracelet: (bracelet) => {
-    set({ selectedBracelet: bracelet });
-  },
+      setBracelet: (bracelet) => {
+        set({ selectedBracelet: bracelet });
+      },
 
-  addCharm: (charm) => {
-    const { selectedCharms } = get();
-    if (selectedCharms.length >= 7) return;
+      addCharm: (charm) => {
+        const { selectedCharms } = get();
+        if (selectedCharms.length >= 7) return;
 
-    const newInstance: SelectedCharm = {
-      id: `${charm.id}-${Date.now()}-${Math.random()}`,
-      charm,
-    };
-    
-    set({
-      selectedCharms: [...selectedCharms, newInstance],
-    });
-  },
+        const newInstance: SelectedCharm = {
+          id: `${charm.id}-${Date.now()}-${Math.random()}`,
+          charm,
+        };
 
-  removeCharm: (instanceId) => {
-    const { selectedCharms } = get();
-    set({
-      selectedCharms: selectedCharms.filter((sc) => sc.id !== instanceId),
-    });
-  },
+        set({
+          selectedCharms: [...selectedCharms, newInstance],
+        });
+      },
 
-  reorderCharms: (newOrder) => {
-    set({ selectedCharms: newOrder });
-  },
+      removeCharm: (instanceId) => {
+        const { selectedCharms } = get();
+        set({
+          selectedCharms: selectedCharms.filter((sc) => sc.id !== instanceId),
+        });
+      },
 
-  updateCharmPositions: (positions) => {
-    set({ charmPositions: positions });
-  },
+      reorderCharms: (newOrder) => {
+        set({ selectedCharms: newOrder });
+      },
 
-  setEditingCartItemId: (cartItemId) => {
-    set({ editingCartItemId: cartItemId });
-  },
+      updateCharmPositions: (positions) => {
+        set({ charmPositions: positions });
+      },
 
-  addToCart: () => {
-    const { selectedBracelet, selectedCharms, charmPositions, cart, editingCartItemId } = get();
-    if (!selectedBracelet) return;
+      setEditingCartItemId: (cartItemId) => {
+        set({ editingCartItemId: cartItemId });
+      },
 
-    const isEditing = !!editingCartItemId && cart.some((c) => c.id === editingCartItemId);
+      addToCart: (previewImage?: string) => {
+        const { selectedBracelet, selectedCharms, charmPositions, cart, editingCartItemId } = get();
+        if (!selectedBracelet) return;
 
-    if (isEditing) {
-      // Update existing cart item in-place
-      const updatedCart = cart.map((item) =>
-        item.id === editingCartItemId
-          ? {
-              ...item,
-              bracelet: selectedBracelet,
-              charms: [...selectedCharms],
-              charmPositions: { ...charmPositions },
-            }
-          : item
-      );
+        const isEditing = !!editingCartItemId && cart.some((c) => c.id === editingCartItemId);
 
-      set({ cart: updatedCart, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
-      return;
-    }
+        if (isEditing) {
+          // Update existing cart item in-place
+          const updatedCart = cart.map((item) =>
+            item.id === editingCartItemId
+              ? {
+                ...item,
+                bracelet: selectedBracelet,
+                charms: [...selectedCharms],
+                charmPositions: { ...charmPositions },
+                previewImage, // Pass previewImage to existing item
+              }
+              : item
+          );
 
-    const cartItem: CartItem = {
-      bracelet: selectedBracelet,
-      charms: [...selectedCharms],
-      charmPositions: { ...charmPositions },
-      id: `cart-${Date.now()}-${Math.random()}`,
-    };
+          set({ cart: updatedCart, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
+          return;
+        }
 
-    set({ cart: [...cart, cartItem], selectedCharms: [], charmPositions: {}, editingCartItemId: null }); // Clear editor after adding to cart
-  },
+        const cartItem: CartItem = {
+          bracelet: selectedBracelet,
+          charms: [...selectedCharms],
+          charmPositions: { ...charmPositions },
+          id: `cart-${Date.now()}-${Math.random()}`,
+          previewImage, // Pass previewImage to new item
+        };
 
-  removeFromCart: (cartItemId) => {
-    const { cart, editingCartItemId } = get();
-    set({
-      cart: cart.filter((item) => item.id !== cartItemId),
-      editingCartItemId: editingCartItemId === cartItemId ? null : editingCartItemId,
-    });
-  },
+        set({ cart: [...cart, cartItem], selectedCharms: [], charmPositions: {}, editingCartItemId: null }); // Clear editor after adding to cart
+      },
 
-  reorderCartItemCharms: (cartItemId, newCharmOrder) => {
-    const { cart } = get();
-    const updatedCart = cart.map((item) =>
-      item.id === cartItemId
-        ? { ...item, charms: newCharmOrder }
-        : item
-    );
-    set({ cart: updatedCart });
-  },
+      removeFromCart: (cartItemId) => {
+        const { cart, editingCartItemId } = get();
+        set({
+          cart: cart.filter((item) => item.id !== cartItemId),
+          editingCartItemId: editingCartItemId === cartItemId ? null : editingCartItemId,
+        });
+      },
 
-  clearSelection: () => {
-    set({ selectedBracelet: null, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
-  },
+      reorderCartItemCharms: (cartItemId, newCharmOrder) => {
+        const { cart } = get();
+        const updatedCart = cart.map((item) =>
+          item.id === cartItemId
+            ? { ...item, charms: newCharmOrder }
+            : item
+        );
+        set({ cart: updatedCart });
+      },
 
-  hasSelectedBracelet: () => {
-    return get().selectedBracelet !== null;
-  },
+      clearSelection: () => {
+        set({ selectedBracelet: null, selectedCharms: [], charmPositions: {}, editingCartItemId: null });
+      },
 
-  getTotalPrice: () => {
-    const { selectedBracelet, selectedCharms } = get();
-    if (!selectedBracelet) return 0;
+      clearCart: () => {
+        set({ cart: [] });
+      },
 
-    const braceletPrice = selectedBracelet.price;
-    const charmsPrice = selectedCharms.reduce(
-      (total, sc) => total + sc.charm.price,
-      0
-    );
+      hasSelectedBracelet: () => {
+        return get().selectedBracelet !== null;
+      },
 
-    return braceletPrice + charmsPrice;
-  },
+      getTotalPrice: () => {
+        const { selectedBracelet, selectedCharms } = get();
+        if (!selectedBracelet) return 0;
 
-  getCartTotal: () => {
-    const { cart } = get();
-    return cart.reduce((total, item) => {
-      const braceletPrice = item.bracelet.price;
-      const charmsPrice = item.charms.reduce(
-        (sum, sc) => sum + sc.charm.price,
-        0
-      );
-      return total + braceletPrice + charmsPrice;
-    }, 0);
-  },
-}),
+        const braceletPrice = selectedBracelet.price;
+        const charmsPrice = selectedCharms.reduce(
+          (total, sc) => total + sc.charm.price,
+          0
+        );
+
+        return braceletPrice + charmsPrice;
+      },
+
+      getCartTotal: () => {
+        const { cart } = get();
+        return cart.reduce((total, item) => {
+          const braceletPrice = item.bracelet.price;
+          const charmsPrice = item.charms.reduce(
+            (sum, sc) => sum + sc.charm.price,
+            0
+          );
+          return total + braceletPrice + charmsPrice;
+        }, 0);
+      },
+    }),
     {
       name: 'charm-selection-storage',
       storage: createJSONStorage(() => {
@@ -204,8 +212,8 @@ export const useStore = create<StoreState>()(
         // Fallback for SSR - use a no-op storage
         return {
           getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
+          setItem: () => { },
+          removeItem: () => { },
         };
       }),
       // Persist selection + cart so refresh doesn't wipe the user's basket.

@@ -23,7 +23,7 @@ export default function Button({
   const variants = {
     primary: 'bg-[linear-gradient(135deg,#7a5a00_0%,#d4af37_25%,#ffef9a_50%,#d4af37_75%,#7a5a00_100%)] text-gray-900 ring-1 ring-black/10 shadow-sm',
     secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400',
-    outline: 'border-2 border-pink-500 text-pink-600 hover:bg-pink-50 focus:ring-pink-500',
+    outline: 'border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50 focus:ring-yellow-500',
   };
   
   const sizes = {
