@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { bufferFromByteaField, byteaHexFromBase64 } from './utils';
 
 // Initialize Supabase client with error checking
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,6 +37,7 @@ export interface Charm {
   // New schema fields
   image_url: string;
   glb_url: string;
+  icon3d?: string;
 
   background_id?: number | string;
   tags?: string[];
@@ -150,7 +150,7 @@ export async function getCharms(): Promise<Charm[]> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id, image_url, glb_url,
+        id, name, description, price, category, background_id, image_url, glb_url, icon3d,
         charm_tags (
           tags (
             name
@@ -184,7 +184,7 @@ export async function getCharmsByCategory(category: string): Promise<Charm[]> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id, image_url, glb_url,
+        id, name, description, price, category, background_id, image_url, glb_url, icon3d,
         charm_tags (
           tags (
             name
@@ -242,7 +242,7 @@ export async function getCharmsByTag(tagName: string): Promise<Charm[]> {
       .from('charm_tags')
       .select(`
         charms (
-          id, name, description, price, background_id, image_url, glb_url
+          id, name, description, price, background_id, image_url, glb_url, icon3d
         )
       `)
       .eq('tag_id', tagData.id);
@@ -277,7 +277,7 @@ export async function getCharmById(id: string): Promise<Charm | null> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id, image_url, glb_url,
+        id, name, description, price, category, background_id, image_url, glb_url, icon3d,
         charm_tags (
           tags (
             name
@@ -301,7 +301,7 @@ export async function getCharmsWithBackgrounds(): Promise<Charm[]> {
     const { data, error } = await supabase
       .from('charms')
       .select(`
-        id, name, description, price, category, background_id, image_url, glb_url,
+        id, name, description, price, category, background_id, image_url, glb_url, icon3d,
         charm_tags (
           tags (
             name
