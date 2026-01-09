@@ -57,12 +57,22 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (cart.length === 0) {
-      router.replace('/cart');
+      const timer = setTimeout(() => {
+        router.replace('/cart');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [cart, router]);
 
   if (cart.length === 0) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Redirecting to cart...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
