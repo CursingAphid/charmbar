@@ -705,6 +705,8 @@ export default function PreviewCanvas() {
                         className="object-contain drop-shadow-lg"
                         sizes="(max-width: 1024px) 18.75vw, 150px"
                         draggable={false}
+                        unoptimized
+                        priority
                       />
                     </div>
                   </motion.div>
@@ -773,19 +775,16 @@ export default function PreviewCanvas() {
             {selectedCharmsDisplay.map((item) => (
               <div key={item.id} className="group relative">
                 <div className="w-16 bg-gray-50 rounded-lg border border-gray-200 flex flex-col items-center p-1.5 relative hover:bg-white hover:shadow-sm transition-all">
-                  <div className="w-10 h-10 relative mb-1">
+                  <div className="w-14 h-14 relative mb-1">
                     <Image
                       src={getCharmImageUrl(item.charm)}
                       alt={item.charm.name}
                       fill
                       className="object-contain"
-                      sizes="40px"
+                      sizes="56px"
                     />
                   </div>
                   <div className="text-center w-full px-0.5">
-                    <p className="text-[9px] font-bold text-gray-600 mb-0.5 leading-tight">
-                      Charm
-                    </p>
                     <p className="text-[12px] font-bold bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] bg-clip-text text-transparent leading-none">
                       €{item.charm.price.toFixed(2)}
                     </p>

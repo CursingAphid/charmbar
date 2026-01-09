@@ -55,10 +55,13 @@ export default function CheckoutPage() {
   }, []);
 
 
-  if (cart.length === 0) {
-    if (typeof window !== 'undefined') {
-      router.push('/cart');
+  useEffect(() => {
+    if (cart.length === 0) {
+      router.replace('/cart');
     }
+  }, [cart, router]);
+
+  if (cart.length === 0) {
     return null;
   }
 

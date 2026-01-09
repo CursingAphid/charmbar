@@ -42,6 +42,11 @@ const translations = {
     'home.howItWorks.step4.title': 'Shipped!',
     'home.howItWorks.step4.description': 'We will carefully package and ship your unique bracelet.',
 
+    // Cart Item
+    'cart.item.bracelet': 'Bracelet',
+    'cart.item.included_charms': 'Included Charms',
+    'cart.item.edit': 'Edit Design',
+
     // Charms page
     'charms.title': 'Choose Your Charms',
     'charms.description': 'Select up to 7 charms and arrange them in the order you want',
@@ -75,6 +80,10 @@ const translations = {
     'cart.total': 'Total',
     'cart.checkout': 'Proceed to Checkout',
     'cart.remove': 'Remove',
+    'cart.shipping': 'Shipping',
+    'cart.shipping.calculated': 'Calculated at checkout',
+    'cart.browse': 'Browse Bracelets',
+    'cart.items_count': 'items in your cart',
 
     // Checkout
     'checkout.title': 'Checkout',
@@ -144,6 +153,11 @@ const translations = {
     'home.howItWorks.step4.title': 'Verzonden!',
     'home.howItWorks.step4.description': 'Wij verpakken en verzenden je unieke armband met zorg.',
 
+    // Cart Item
+    'cart.item.bracelet': 'Armband',
+    'cart.item.included_charms': 'Inbegrepen Charms',
+    'cart.item.edit': 'Ontwerp Bewerken',
+
     // Charms page
     'charms.title': 'Kies Je Charms',
     'charms.description': 'Selecteer maximaal 7 charms en zet ze in de volgorde die je wilt',
@@ -177,6 +191,10 @@ const translations = {
     'cart.total': 'Totaal',
     'cart.checkout': 'Ga Naar Kassa',
     'cart.remove': 'Verwijderen',
+    'cart.shipping': 'Verzendkosten',
+    'cart.shipping.calculated': 'Berekend bij afrekenen',
+    'cart.browse': 'Bekijk Armbanden',
+    'cart.items_count': 'artikelen in je winkelwagen',
 
     // Checkout
     'checkout.title': 'Afrekenen',

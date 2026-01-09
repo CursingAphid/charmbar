@@ -110,49 +110,57 @@ on conflict (id) do nothing;
 create policy "Public Access Charms"
   on storage.objects for select
   using ( bucket_id = 'charms' );
--- Admin Write (Allow data population - adjust logic as needed for your admin auth)
--- For dev simplicity: Allow authenticated users to upload (or switch to public for setup)
-create policy "Authenticated Insert Charms"
-  on storage.objects for insert
-  with check ( bucket_id = 'charms' and auth.role() = 'authenticated' );
+-- Admin Write: RESTRICTED. Use Supabase Dashboard or Service Key to upload.
+-- We disable client-side uploads for security.
+-- create policy "Authenticated Insert Charms"
+--   on storage.objects for insert
+--   with check ( bucket_id = 'charms' and auth.role() = 'authenticated' );
 -- 2. MODELS Bucket
 -- Public Read
 create policy "Public Access Models"
   on storage.objects for select
   using ( bucket_id = 'models' );
 -- Admin Write
-create policy "Authenticated Insert Models"
-  on storage.objects for insert
-  with check ( bucket_id = 'models' and auth.role() = 'authenticated' );
+-- create policy "Authenticated Insert Models"
+--   on storage.objects for insert
+--   with check ( bucket_id = 'models' and auth.role() = 'authenticated' );
 -- 3. BACKGROUNDS Bucket
 -- Public Read
 create policy "Public Access Backgrounds"
   on storage.objects for select
   using ( bucket_id = 'backgrounds' );
 -- Admin Write
-create policy "Authenticated Insert Backgrounds"
-  on storage.objects for insert
-  with check ( bucket_id = 'backgrounds' and auth.role() = 'authenticated' );
+-- create policy "Authenticated Insert Backgrounds"
+--   on storage.objects for insert
+--   with check ( bucket_id = 'backgrounds' and auth.role() = 'authenticated' );
 -- 4. PREVIEWS Bucket (User Generated Content)
 -- Public Read (So admin/user can see it in order history)
 create policy "Public Access Previews"
   on storage.objects for select
   using ( bucket_id = 'previews' );
--- Authenticated Upload (Users saving their designs)
+-- Authenticated Upload (Users saving their designs) - Restricted to Images
 create policy "Authenticated Insert Previews"
   on storage.objects for insert
-  with check ( bucket_id = 'previews' and auth.role() = 'authenticated' );
+  with check (
+    bucket_id = 'previews' 
+    and auth.role() = 'authenticated'
+    and (name like '%.png' or name like '%.jpg' or name like '%.jpeg')
+  );
 -- 5. BRACELETS Bucket
 -- Public Read
 create policy "Public Access Bracelets"
   on storage.objects for select
   using ( bucket_id = 'bracelets' );
 -- Admin Write
-create policy "Authenticated Insert Bracelets"
-  on storage.objects for insert
-  with check ( bucket_id = 'bracelets' and auth.role() = 'authenticated' );
+-- create policy "Authenticated Insert Bracelets"
+--   on storage.objects for insert
+--   with check ( bucket_id = 'bracelets' and auth.role() = 'authenticated' );
 -- (Optional) Anomymous Uploads for Previews?
 -- If you want guests to add to cart without login:
--- create policy "Guest Insert Previews"
---   on storage.objects for insert
---   with check ( bucket_id = 'previews' );
+create policy "Guest Insert Previews"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'previews'
+    and auth.role() = 'anon'
+    and (name like '%.png' or name like '%.jpg' or name like '%.jpeg')
+  );

@@ -214,8 +214,8 @@ export default function CharmCard({ charm }: CharmCardProps) {
           }
         }}
         hover
-        className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${isSelected
-          ? 'ring-2 ring-black ring-offset-2 bg-gray-50/50'
+        className={`relative overflow-hidden transition-all duration-300 cursor-pointer ring-2 ring-black ring-offset-2 ${isSelected
+          ? 'bg-gray-50/50'
           : ''
           }`}
       >
@@ -285,7 +285,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
 
         <div
-          className="relative h-[180px] min-h-[180px] sm:min-h-0 sm:h-52 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center py-6 px-2 sm:p-3"
+          className="relative h-[180px] min-h-[180px] sm:min-h-0 sm:h-[185px] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center py-6 px-2 sm:p-3"
           style={backgroundUrl && showBackground ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',

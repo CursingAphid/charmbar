@@ -10,6 +10,8 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import { useToast } from './ToastProvider';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 interface CartItemProps {
   cartItem: {
     id: string;
@@ -29,6 +31,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
   const reorderCharms = useStore((state) => state.reorderCharms);
   const updateCharmPositions = useStore((state) => state.updateCharmPositions);
   const setEditingCartItemId = useStore((state) => state.setEditingCartItemId);
+  const { t } = useLanguage();
 
   const handleEdit = () => {
     // Restore the exact design into the editor (bracelet + charm instances + their positions)
@@ -133,7 +136,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                   {cartItem.bracelet.name}
                 </h3>
                 <p className="text-sm text-gray-600 font-medium">
-                  Bracelet: €{cartItem.bracelet.price.toFixed(2)}
+                  {t('cart.item.bracelet')}: €{cartItem.bracelet.price.toFixed(2)}
                 </p>
               </div>
               <div className="text-right">
@@ -147,7 +150,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
             {groupedCharms.length > 0 && (
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <p className="text-xs uppercase tracking-wider font-bold text-gray-400 mb-3">
-                  Included Charms:
+                  {t('cart.item.included_charms')}:
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {groupedCharms.map((group) => (
@@ -190,7 +193,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                 className="flex-1 flex items-center justify-center gap-2"
               >
                 <Edit className="w-4 h-4" />
-                Edit Design
+                {t('cart.item.edit')}
               </Button>
               <Button
                 variant="secondary"
@@ -198,7 +201,7 @@ export default function CartItem({ cartItem }: CartItemProps) {
                 className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border-none"
               >
                 <Trash2 className="w-4 h-4" />
-                Remove
+                {t('cart.remove')}
               </Button>
             </div>
           </div>
