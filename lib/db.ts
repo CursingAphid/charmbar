@@ -50,6 +50,16 @@ export function getCharmImageUrl(charm: Charm): string {
   return charm.image_url || '';
 }
 
+export function getBraceletImageUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  // Ignore legacy local paths to trigger re-sync from database
+  if (path.startsWith('/images/bracelets/')) return '';
+  if (path.startsWith('/')) return path; // Other static assets (e.g. logos)
+  const { data } = supabase.storage.from('bracelets').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function getCharmBackgroundUrl(charm: Charm): Promise<string | null> {
   if (charm.background_id) {
     const background = await getBackgroundById(String(charm.background_id));
@@ -137,7 +147,15 @@ export async function getBracelets(): Promise<Bracelet[]> {
       .order('price', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+
+    // Ensure all images are full URLs
+    const bracelets = (data || []).map((b: any) => ({
+      ...b,
+      image: getBraceletImageUrl(b.image),
+      openImage: getBraceletImageUrl(b.openImage)
+    }));
+
+    return bracelets;
   } catch (error) {
     console.error('Error fetching bracelets:', error);
     return [];
@@ -263,8 +281,24 @@ export async function getCharmsByTag(tagName: string): Promise<Charm[]> {
 
 export async function getBraceletById(id: string): Promise<Bracelet | null> {
   try {
-    // TODO: Implement if needed
-    return null;
+    const { data, error } = await supabase
+      .from('bracelets')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching bracelet by ID:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return {
+      ...data,
+      image: getBraceletImageUrl(data.image),
+      openImage: getBraceletImageUrl(data.openImage)
+    };
   } catch (error) {
     console.error('Error fetching bracelet by ID:', error);
     return null;

@@ -1,10 +1,10 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 
-// Cache computed translation per resolved image src (including Next Image optimized URLs).
-const transformCache = new Map<string, { x: number; y: number }>();
+// Cache computed normalized ratios per resolved image src to avoid re-running canvas logic.
+const ratioCache = new Map<string, { rx: number; ry: number; nw: number; nh: number }>();
 
 function computeOpaqueBoundingBoxCenter(img: HTMLImageElement, alphaThreshold = 8): { cx: number; cy: number } | null {
   const w = img.naturalWidth;
@@ -22,7 +22,7 @@ function computeOpaqueBoundingBoxCenter(img: HTMLImageElement, alphaThreshold = 
   try {
     data = ctx.getImageData(0, 0, w, h);
   } catch {
-    // If canvas is tainted for any reason, just fall back to default.
+    // If canvas is tainted for any reason (CORS), just fall back to default.
     return null;
   }
 
@@ -60,11 +60,47 @@ export default function AutoCenteredImage({
   alphaThreshold = 8,
   ...props
 }: AutoCenteredImageProps) {
-  const [computed, setComputed] = useState<{ x: number; y: number } | null>(null);
+  const [ratios, setRatios] = useState<{ rx: number; ry: number; nw: number; nh: number } | null>(null);
+  const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Track container size to handle scale-independent translations dynamically
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerSize({
+          w: entry.contentRect.width,
+          h: entry.contentRect.height
+        });
+      }
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const computed = useMemo(() => {
+    if (!ratios || !containerSize || containerSize.w === 0 || containerSize.h === 0) return null;
+
+    const { rx, ry, nw, nh } = ratios;
+    // Account for object-contain scaling logic
+    const scale = Math.min(containerSize.w / nw, containerSize.h / nh);
+
+    return {
+      x: rx * nw * scale,
+      y: ry * nh * scale
+    };
+  }, [ratios, containerSize]);
 
   const mergedStyle = useMemo(() => {
     const existingTransform = (style as any)?.transform as string | undefined;
-    const computedTransform = computed ? `translate(${computed.x.toFixed(2)}px, ${computed.y.toFixed(2)}px)` : fallbackTransform;
+    const computedTransform = computed
+      ? `translate(${computed.x.toFixed(2)}px, ${computed.y.toFixed(2)}px)`
+      : fallbackTransform;
+
     return {
       ...(style ?? {}),
       objectPosition: '50% 50%',
@@ -75,34 +111,40 @@ export default function AutoCenteredImage({
   const onLoadingComplete = useCallback(
     (img: HTMLImageElement) => {
       const cacheKey = img.currentSrc || img.src;
-      const cached = transformCache.get(cacheKey);
+      const cached = ratioCache.get(cacheKey);
+
       if (cached) {
-        setComputed(cached);
+        setRatios(cached);
         return;
       }
 
       const center = computeOpaqueBoundingBoxCenter(img, alphaThreshold);
       if (center) {
-        // Compute how much to translate the *rendered* image so that the opaque bbox center aligns with the container center.
-        const rect = img.getBoundingClientRect();
-        const w = img.naturalWidth;
-        const h = img.naturalHeight;
-        const scale = Math.min(rect.width / w, rect.height / h);
+        const nw = img.naturalWidth;
+        const nh = img.naturalHeight;
 
-        const dx = (w / 2 - center.cx) * scale;
-        const dy = (h / 2 - center.cy) * scale;
+        // Compute normalized shift ratios relative to natural size
+        const rx = (nw / 2 - center.cx) / nw;
+        const ry = (nh / 2 - center.cy) / nh;
 
-        const t = { x: dx, y: dy };
-        transformCache.set(cacheKey, t);
-        setComputed(t);
+        const r = { rx, ry, nw, nh };
+        ratioCache.set(cacheKey, r);
+        setRatios(r);
       } else {
-        setComputed(null);
+        setRatios(null);
       }
     },
     [alphaThreshold]
   );
 
-  return <Image {...props} style={mergedStyle} onLoadingComplete={onLoadingComplete} />;
+  return (
+    <Image
+      {...props}
+      ref={imgRef}
+      style={mergedStyle}
+      onLoadingComplete={onLoadingComplete}
+    />
+  );
 }
 
 

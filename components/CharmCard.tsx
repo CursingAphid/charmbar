@@ -214,11 +214,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
           }
         }}
         hover
-        className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
-          isSelected
-            ? 'ring-2 ring-black ring-offset-2 bg-gray-50/50'
-            : ''
-        }`}
+        className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${isSelected
+          ? 'ring-2 ring-black ring-offset-2 bg-gray-50/50'
+          : ''
+          }`}
       >
         {/* Left side action buttons */}
         <div className="absolute top-2 left-2 z-10 flex gap-1">
@@ -232,11 +231,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
               e.stopPropagation();
               setShowBackground(!showBackground);
             }}
-            className={`rounded-full p-1.5 shadow-lg transition-colors ${
-              showBackground
-                ? 'bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] text-white'
-                : 'bg-white/90 hover:bg-white text-gray-600'
-            }`}
+            className={`rounded-full p-1.5 shadow-lg transition-colors ${showBackground
+              ? 'bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] text-white'
+              : 'bg-white/90 hover:bg-white text-gray-600'
+              }`}
             aria-label={showBackground ? 'Hide background' : 'Show background'}
             title={showBackground ? 'Hide background' : 'Show background'}
           >
@@ -287,7 +285,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
 
 
         <div
-          className="relative h-32 sm:h-52 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-2 sm:p-3"
+          className="relative h-[180px] min-h-[180px] sm:min-h-0 sm:h-52 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center py-6 px-2 sm:p-3"
           style={backgroundUrl && showBackground ? {
             backgroundImage: `url(${backgroundUrl})`,
             backgroundSize: 'cover',
@@ -403,11 +401,10 @@ export default function CharmCard({ charm }: CharmCardProps) {
                         e.stopPropagation();
                         setShowBackground(!showBackground);
                       }}
-                      className={`rounded-full p-2 shadow-lg transition-colors ${
-                        showBackground
-                          ? 'bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] text-white'
-                          : 'bg-white/90 hover:bg-white text-gray-600'
-                      }`}
+                      className={`rounded-full p-2 shadow-lg transition-colors ${showBackground
+                        ? 'bg-[linear-gradient(135deg,#4a3c00_0%,#8b6914_25%,#b8860b_50%,#8b6914_75%,#4a3c00_100%)] text-white'
+                        : 'bg-white/90 hover:bg-white text-gray-600'
+                        }`}
                       aria-label={showBackground ? 'Hide background' : 'Show background'}
                       title={showBackground ? 'Hide background' : 'Show background'}
                     >
@@ -446,7 +443,7 @@ export default function CharmCard({ charm }: CharmCardProps) {
                                 size={1.5}
                                 color="#ec4899"
                                 spin={true}
-                                onInteractionChange={() => {}}
+                                onInteractionChange={() => { }}
                                 onError={handleGlbError}
                                 onLoad={handle3DLoaded}
                                 cameraZ={4}

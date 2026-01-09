@@ -101,7 +101,8 @@ values
   ('charms', 'charms', true),
   ('models', 'models', true),
   ('backgrounds', 'backgrounds', true),
-  ('previews', 'previews', true)
+  ('previews', 'previews', true),
+  ('bracelets', 'bracelets', true)
 on conflict (id) do nothing;
 -- B. Storage Policies
 -- 1. CHARMS Bucket
@@ -141,6 +142,15 @@ create policy "Public Access Previews"
 create policy "Authenticated Insert Previews"
   on storage.objects for insert
   with check ( bucket_id = 'previews' and auth.role() = 'authenticated' );
+-- 5. BRACELETS Bucket
+-- Public Read
+create policy "Public Access Bracelets"
+  on storage.objects for select
+  using ( bucket_id = 'bracelets' );
+-- Admin Write
+create policy "Authenticated Insert Bracelets"
+  on storage.objects for insert
+  with check ( bucket_id = 'bracelets' and auth.role() = 'authenticated' );
 -- (Optional) Anomymous Uploads for Previews?
 -- If you want guests to add to cart without login:
 -- create policy "Guest Insert Previews"

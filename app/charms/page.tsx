@@ -72,26 +72,26 @@ export default function CharmsPage() {
   // Note: Removed preloading to avoid overwhelming the server with requests for charms that don't have GLB data
   // 3D models will load on-demand when users hover over charms
 
-  // Ensure a bracelet is always selected (defensive; store defaults to gold)
-  // This hook must come before any conditional returns to maintain hooks order
+  // Sync selected bracelet with database data or select default
   useEffect(() => {
-    if (!selectedBracelet) {
-      if (bracelets.length > 0) {
-        const gold = bracelets.find((b) => b.id === 'bracelet-2') ?? bracelets[0];
-        if (gold) setBracelet(gold);
-      } else if (!loading) {
-        // Fallback if no bracelets in database to prevent being stuck on loading screen
-        setBracelet({
-          id: 'default-bracelet',
-          name: 'Gold Plated Chain',
-          description: 'Luxurious gold-plated chain',
-          price: 34.99,
-          image: '/images/bracelets/bracelet_gold.png',
-          openImage: '/images/bracelets/bracelet_open.png',
-          grayscale: false,
-          color: 'Gold',
-          material: 'Gold Plated'
-        });
+    if (loading || bracelets.length === 0) return;
+
+    // Find the current selected bracelet in the fresh list from DB
+    const latest = bracelets.find(b => b.id === selectedBracelet?.id);
+
+    // If nothing selected, OR if the selected ID no longer exists in DB (orphaned),
+    // OR if it's still using an old local path starting with '/images/'
+    const isInvalid = !selectedBracelet || !latest || selectedBracelet.image.startsWith('/images/');
+
+    if (isInvalid) {
+      console.log('🔄 Selection invalid or stale. Selecting fresh bracelet from DB...');
+      const gold = bracelets.find((b) => b.name.toLowerCase().includes('gold')) ?? bracelets[0];
+      if (gold) setBracelet(gold);
+    } else if (latest) {
+      // If URLs have changed (e.g. storage bucket refresh), sync them
+      if (latest.image !== selectedBracelet.image || latest.openImage !== selectedBracelet.openImage) {
+        console.log('🔄 Syncing selected bracelet URLs with latest storage paths');
+        setBracelet(latest);
       }
     }
   }, [selectedBracelet, setBracelet, bracelets, loading]);
