@@ -1,99 +1,148 @@
--- Create bracelets table
-CREATE TABLE IF NOT EXISTS bracelets (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
-  image TEXT NOT NULL,
-  openImage TEXT,
-  grayscale BOOLEAN DEFAULT FALSE,
-  color TEXT NOT NULL,
-  material TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+-- 1. CLEANUP (Drop existing tables if you want a fresh start)
+-- CAUTION: This deletes all data!
+drop table if exists charm_tags cascade;
+drop table if exists tags cascade;
+drop table if exists order_items cascade; -- if you standardized this
+drop table if exists orders cascade;
+drop table if exists charms cascade;
+drop table if exists backgrounds cascade;
+drop table if exists bracelets cascade;
+-- 2. CREATE TABLES
+-- Bracelets (Keep mostly same, usually static assets)
+create table bracelets (
+  id text primary key,
+  name text not null,
+  description text,
+  price numeric(10, 2) not null default 0,
+  image text not null,      -- Path to public storage or static file
+  "openImage" text,         -- Note: keeping mixedCase to match your frontend code, or switch to snake_case
+  grayscale boolean default false,
+  color text,
+  material text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
-
--- Create charms table
-CREATE TABLE IF NOT EXISTS charms (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
-  image TEXT NOT NULL,
-  category TEXT NOT NULL,
-  icon3d TEXT,
-  glbPath TEXT,
-  background TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Backgrounds (Simplified)
+create table backgrounds (
+  id bigint generated always as identity primary key,
+  name text not null,
+  image_url text not null, -- URL to Supabase Storage 'backgrounds' bucket
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_charms_category ON charms(category);
-CREATE INDEX IF NOT EXISTS idx_charms_background ON charms(background);
-
--- Create backgrounds table
-CREATE TABLE IF NOT EXISTS backgrounds (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  image_data BYTEA NOT NULL,
-  image_filename TEXT,
-  image_mimetype TEXT DEFAULT 'image/png',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- Charms (The major refactor)
+create table charms (
+  id text primary key default uuid_generate_v4()::text,
+  name text not null,
+  description text,
+  price numeric(10, 2) not null default 0,
+  category text,
+  
+  -- Assets stored as URLs now
+  image_url text, -- URL to Supabase Storage 'charms' bucket
+  glb_url text,   -- URL to Supabase Storage 'models' bucket
+  
+  -- relations
+  background_id bigint references backgrounds(id),
+  
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
-
--- Create tags table
-CREATE TABLE IF NOT EXISTS tags (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- Tags
+create table tags (
+  id bigint generated always as identity primary key,
+  name text not null unique,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
-
--- Create charm_tags junction table for many-to-many relationship
-CREATE TABLE IF NOT EXISTS charm_tags (
-  charm_id TEXT NOT NULL REFERENCES charms(id) ON DELETE CASCADE,
-  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-  PRIMARY KEY (charm_id, tag_id)
+-- Charm Tags (Many-to-Many)
+create table charm_tags (
+  id bigint generated always as identity primary key,
+  charm_id text references charms(id) on delete cascade,
+  tag_id bigint references tags(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique(charm_id, tag_id)
 );
-
--- Enable Row Level Security (RLS)
-ALTER TABLE bracelets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE charms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE backgrounds ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
-ALTER TABLE charm_tags ENABLE ROW LEVEL SECURITY;
-
--- Allow public (anon) read access for the storefront.
--- Without these SELECT policies, the Supabase JS client will return 0 rows (no error) when using the anon key.
-DROP POLICY IF EXISTS "Public read bracelets" ON bracelets;
-CREATE POLICY "Public read bracelets" ON bracelets FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read charms" ON charms;
-CREATE POLICY "Public read charms" ON charms FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read backgrounds" ON backgrounds;
-CREATE POLICY "Public read backgrounds" ON backgrounds FOR SELECT USING (true);
-
--- Legacy compatibility policies
-DROP POLICY IF EXISTS "Allow public read access on bracelets" ON bracelets;
-CREATE POLICY "Allow public read access on bracelets" ON bracelets FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow public read access on charms" ON charms;
-CREATE POLICY "Allow public read access on charms" ON charms FOR SELECT USING (true);
-
-
--- Insert sample bracelet data
-INSERT INTO bracelets (id, name, description, price, image, openImage, grayscale, color, material) VALUES
-('bracelet-1', 'Classic Silver Chain', 'Elegant silver chain bracelet perfect for any occasion', 29.99, '/images/bracelets/bracelet_silver.png', '/images/bracelets/bracelet_open.png', true, 'Silver', 'Sterling Silver'),
-('bracelet-2', 'Gold Plated Chain', 'Luxurious gold-plated chain with timeless appeal', 34.99, '/images/bracelets/bracelet_gold.png', '/images/bracelets/bracelet_open.png', false, 'Gold', 'Gold Plated');
-
--- Insert sample charm data (without binary data for now)
-INSERT INTO charms (id, name, description, price, category) VALUES
-('charm-1', 'Heart with Wings', 'Classic heart with wings charm', 3.99, 'Symbols'),
-('charm-2', 'Snowflake', 'Delicate snowflake charm', 3.99, 'Nature'),
-('charm-3', 'Mother & Daughter Heart', 'Beautiful mother and daughter heart charm', 3.99, 'Symbols'),
-('charm-4', 'Tree in Heart', 'Tree of life in heart charm', 3.99, 'Nature'),
-('charm-5', 'Golden Ripple', 'Elegant golden ripple charm with flowing waves', 3.99, 'Nature'),
-('charm-6', 'Tree in Circle', 'Beautiful tree encircled by elegant design', 3.99, 'Nature'),
-('charm-7', 'Half Moon', 'Mystical half moon charm with celestial beauty', 3.99, 'Nature');
+-- Orders
+create table orders (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id),
+  items jsonb not null, -- Stores the cart snapshot including custom preview_image URLs
+  total_amount numeric(10, 2) not null,
+  status text not null default 'pending', -- pending, completed, cancelled, shipping
+  created_at timestamptz default now()
+);
+-- 3. ROW LEVEL SECURITY (RLS)
+alter table bracelets enable row level security;
+alter table backgrounds enable row level security;
+alter table charms enable row level security;
+alter table tags enable row level security;
+alter table charm_tags enable row level security;
+alter table orders enable row level security;
+-- Public Read Access (Everyone can see products)
+create policy "Public bracelets are viewable by everyone" on bracelets for select using (true);
+create policy "Public backgrounds are viewable by everyone" on backgrounds for select using (true);
+create policy "Public charms are viewable by everyone" on charms for select using (true);
+create policy "Public tags are viewable by everyone" on tags for select using (true);
+create policy "Public charm_tags are viewable by everyone" on charm_tags for select using (true);
+-- Orders: Users can only see their own
+create policy "Users can view their own orders" on orders for select using (auth.uid() = user_id);
+create policy "Users can insert their own orders" on orders for insert with check (auth.uid() = user_id);
+-- (Optional) Admin Write Access
+-- You might want to create a policy where specific user emails can INSERT/UPDATE products.
+-- For now, writing to products is usually done via Supabase Dashboard.
+-- 4. STORAGE BUCKETS & POLICIES
+-- We can create the buckets directly via SQL to save manual setup.
+-- A. Create Buckets (if they don't exist)
+insert into storage.buckets (id, name, public)
+values 
+  ('charms', 'charms', true),
+  ('models', 'models', true),
+  ('backgrounds', 'backgrounds', true),
+  ('previews', 'previews', true)
+on conflict (id) do nothing;
+-- B. Storage Policies
+-- 1. CHARMS Bucket
+-- Public Read
+create policy "Public Access Charms"
+  on storage.objects for select
+  using ( bucket_id = 'charms' );
+-- Admin Write (Allow data population - adjust logic as needed for your admin auth)
+-- For dev simplicity: Allow authenticated users to upload (or switch to public for setup)
+create policy "Authenticated Insert Charms"
+  on storage.objects for insert
+  with check ( bucket_id = 'charms' and auth.role() = 'authenticated' );
+-- 2. MODELS Bucket
+-- Public Read
+create policy "Public Access Models"
+  on storage.objects for select
+  using ( bucket_id = 'models' );
+-- Admin Write
+create policy "Authenticated Insert Models"
+  on storage.objects for insert
+  with check ( bucket_id = 'models' and auth.role() = 'authenticated' );
+-- 3. BACKGROUNDS Bucket
+-- Public Read
+create policy "Public Access Backgrounds"
+  on storage.objects for select
+  using ( bucket_id = 'backgrounds' );
+-- Admin Write
+create policy "Authenticated Insert Backgrounds"
+  on storage.objects for insert
+  with check ( bucket_id = 'backgrounds' and auth.role() = 'authenticated' );
+-- 4. PREVIEWS Bucket (User Generated Content)
+-- Public Read (So admin/user can see it in order history)
+create policy "Public Access Previews"
+  on storage.objects for select
+  using ( bucket_id = 'previews' );
+-- Authenticated Upload (Users saving their designs)
+create policy "Authenticated Insert Previews"
+  on storage.objects for insert
+  with check ( bucket_id = 'previews' and auth.role() = 'authenticated' );
+-- (Optional) Anomymous Uploads for Previews?
+-- If you want guests to add to cart without login:
+-- create policy "Guest Insert Previews"
+--   on storage.objects for insert
+--   with check ( bucket_id = 'previews' );

@@ -116,7 +116,8 @@ function CharmOnChain({
     }
   });
 
-  const iconName = charm.icon3d || 'Heart';
+  // Map charm category to 3D icon, fallback to name or default
+  const iconName = charm.category || charm.name || 'Heart';
 
   return (
     <group ref={charmRef} position={position}>
