@@ -169,68 +169,77 @@ export default function CharmsPage() {
   }
 
   const handleAddToCart = async () => {
-    setLoading(true); // Re-use loading state or create a specific one for "Adding to cart..."
+    setLoading(true);
 
     try {
       let previewUrl = undefined;
       const element = document.getElementById('preview-canvas-container');
 
       if (element) {
-        // Capture the canvas
-        const canvas = await html2canvas(element, {
-          useCORS: true,
-          backgroundColor: null, // Transparent background
-          scale: 2, // Higher quality
-          logging: false,
-        });
+        try {
+          // Capture the canvas
+          const canvas = await html2canvas(element, {
+            useCORS: true,
+            backgroundColor: null, // Transparent background
+            scale: 2, // Higher quality
+            logging: false,
+          });
 
-        // Convert to blob
-        const blob = await new Promise<Blob | null>(resolve =>
-          canvas.toBlob(resolve, 'image/png')
-        );
+          // Convert to blob
+          const blob = await new Promise<Blob | null>(resolve =>
+            canvas.toBlob(resolve, 'image/png')
+          );
 
-        if (blob) {
-          // Upload to Supabase
-          const supabase = createClient();
-          const { data: { user } } = await supabase.auth.getUser();
+          if (blob) {
+            // Upload to Supabase
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
 
-          // Allow anonymous uploads if needed, or structured by session ID/random ID if user not logged in
-          // For now, use a random ID if no user, or user ID
-          const userId = user?.id || 'anonymous';
-          const fileName = `${userId}/${Date.now()}-preview.png`;
+            const userId = user?.id || 'anonymous';
+            const fileName = `${userId}/${Date.now()}-preview.png`;
 
-          const { data, error } = await supabase
-            .storage
-            .from('previews')
-            .upload(fileName, blob, {
-              contentType: 'image/png',
-              cacheControl: '3600',
-              upsert: false
-            });
-
-          if (!error && data) {
-            // Get Public URL
-            const { data: { publicUrl } } = supabase
+            const { data, error } = await supabase
               .storage
               .from('previews')
-              .getPublicUrl(fileName);
+              .upload(fileName, blob, {
+                contentType: 'image/png',
+                cacheControl: '3600',
+                upsert: false
+              });
 
-            previewUrl = publicUrl;
-          } else {
-            console.error('Error uploading preview:', error);
+            if (!error && data) {
+              const { data: { publicUrl } } = supabase
+                .storage
+                .from('previews')
+                .getPublicUrl(fileName);
+
+              previewUrl = publicUrl;
+            } else {
+              console.error('❌ Error uploading preview:', error);
+            }
           }
+        } catch (captureError) {
+          console.error('❌ Error capturing preview canvas:', captureError);
         }
       }
 
-      // Add to cart with the preview URL
+      // Add to cart with the preview URL (or undefined if failed)
       addToCart(previewUrl);
-      showToast('Added to cart!', 'success');
+
+      if (previewUrl) {
+        showToast('Added to cart!', 'success');
+      } else {
+        // Warn the user (but still success adding to cart)
+        showToast('Added to cart (preview could not be saved)', 'success'); // kept as success so it doesn't look like a critical error
+        console.warn('⚠️ Added to cart without preview image.');
+      }
+
       router.push('/cart');
     } catch (err) {
-      console.error('Error capturing preview:', err);
+      console.error('❌ Critical error in addToCart:', err);
       // Fallback: add to cart without preview
       addToCart();
-      showToast('Added to cart (without preview)', 'success');
+      showToast('Added to cart', 'success');
       router.push('/cart');
     } finally {
       setLoading(false);

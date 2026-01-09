@@ -574,13 +574,13 @@ export default function PreviewCanvas() {
     );
   }
 
-  const renderPreviewContent = (viewportRef: React.RefObject<HTMLDivElement | null>) => (
+  const renderPreviewContent = (viewportRef: React.RefObject<HTMLDivElement | null>, elementId?: string) => (
     <div
       ref={viewportRef}
       className="w-full max-w-[1000px] aspect-[800/350] rounded-lg overflow-hidden bg-gray-50 relative"
     >
       <motion.div
-        id="preview-canvas-container"
+        id={elementId}
         key={selectedBracelet.id}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -840,7 +840,7 @@ export default function PreviewCanvas() {
             </button>
           </div>
           <div className="w-full flex items-center justify-center p-2 sm:p-3">
-            {renderPreviewContent(viewportRef)}
+            {renderPreviewContent(viewportRef, 'preview-canvas-container')}
           </div>
         </div>
         {renderInfoPanel()}
