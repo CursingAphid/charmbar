@@ -13,19 +13,15 @@ export async function login(formData: FormData) {
     const requestedNext = formData.get('next') as string | null
     const next = requestedNext && requestedNext.startsWith('/') ? requestedNext : '/orders'
 
-    console.log(`🔑 Login action: email="${email}", requestedNext="${requestedNext}", next="${next}"`)
-
     const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
     })
 
     if (error) {
-        console.log(`❌ Login failed: ${error.message}`)
         return { error: error.message }
     }
 
-    console.log(`✅ Login successful, redirecting to: ${next}`)
     revalidatePath('/', 'layout')
     redirect(next)
 }
@@ -44,8 +40,6 @@ export async function signup(formData: FormData) {
     const fullName = formData.get('fullName') as string
     const requestedNext = formData.get('next') as string | null
     const next = requestedNext && requestedNext.startsWith('/') ? requestedNext : '/orders'
-
-    console.log(`✨ Signup action: next is "${next}" (requested: "${requestedNext}")`)
 
     const { data, error } = await supabase.auth.signUp({
         email,

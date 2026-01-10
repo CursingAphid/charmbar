@@ -100,10 +100,6 @@ export default function OrdersList({ orders }: OrdersListProps) {
                                                     {(() => {
                                                         const previewUrlFromDb = order.preview_url
 
-                                                        // #region agent log (H5)
-                                                        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'H5', location: 'components/OrdersList.tsx:renderPreview', message: 'Order preview render decision', data: { hasPreviewUrlFromDb: !!previewUrlFromDb }, timestamp: Date.now() }) }).catch(() => { });
-                                                        // #endregion
-
                                                         if (previewUrlFromDb) {
                                                             return <img src={previewUrlFromDb} alt="Custom Bracelet Design" className="w-full h-full object-contain" />
                                                         }

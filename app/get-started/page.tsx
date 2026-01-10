@@ -5,7 +5,5 @@ export default async function GetStartedPage({ searchParams }: { searchParams?: 
     const params = await searchParams;
     const next = params?.next || '/charms';
 
-    console.log(`🚀 GetStartedPage: searchParams.next="${params?.next}", final next="${next}"`);
-
     return <GetStartedContent next={next} />;
 }
