@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { Package, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getBraceletSnapPoints, DEFAULT_SNAP_POINTS } from '@/lib/braceletSnapPoints'
+import { getCharmImageUrl } from '@/lib/db'
 
 interface Charm {
     id: string
@@ -98,15 +100,66 @@ export default function OrdersList({ orders }: OrdersListProps) {
                                             <div key={index} className="bg-stone-50 rounded-2xl overflow-hidden border border-stone-200">
                                                 {/* Large Preview Image */}
                                                 <div className="w-full aspect-[800/350] bg-white border-b border-stone-200 relative p-4">
-                                                    {item.previewImage ? (
-                                                        <img src={item.previewImage} alt="Custom Bracelet Design" className="w-full h-full object-contain" />
-                                                    ) : item.bracelet.image ? (
-                                                        <img src={item.bracelet.image} alt={item.bracelet.name} className="w-full h-full object-contain" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <Package className="w-12 h-12 text-stone-300" />
-                                                        </div>
-                                                    )}
+                                                    {(() => {
+                                                        const hasPreviewImage = !!item.previewImage
+                                                        const charmPositions = (item as any)?.charmPositions as Record<string, number> | undefined
+                                                        const canRenderOverlay = !hasPreviewImage && !!item?.bracelet?.image && !!charmPositions && Array.isArray(item?.charms) && item.charms.length > 0
+
+                                                        // #region agent log (H5)
+                                                        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'H5', location: 'components/OrdersList.tsx:renderPreview', message: 'Order item preview render decision', data: { hasPreviewImage, canRenderOverlay, charmsCount: item?.charms?.length ?? -1 }, timestamp: Date.now() }) }).catch(() => { });
+                                                        // #endregion
+
+                                                        if (hasPreviewImage) {
+                                                            return <img src={item.previewImage} alt="Custom Bracelet Design" className="w-full h-full object-contain" />
+                                                        }
+
+                                                        if (item.bracelet.image) {
+                                                            const baseImage = (item as any)?.bracelet?.openImage || item.bracelet.image
+                                                            const snapPoints = getBraceletSnapPoints(item.bracelet.id) || DEFAULT_SNAP_POINTS
+
+                                                            return (
+                                                                <>
+                                                                    <img src={baseImage} alt={item.bracelet.name} className="w-full h-full object-contain" />
+
+                                                                    {/* If no screenshot was saved, render a deterministic overlay preview from stored charm positions */}
+                                                                    {canRenderOverlay && item.charms.map((charmInstance) => {
+                                                                        const positionIndex = charmPositions?.[charmInstance.id]
+                                                                        if (positionIndex === undefined) return null
+                                                                        const position = snapPoints[positionIndex]
+                                                                        if (!position) return null
+
+                                                                        return (
+                                                                            <div
+                                                                                key={charmInstance.id}
+                                                                                className="absolute z-10 pointer-events-none"
+                                                                                style={{
+                                                                                    left: `${(position.x / 800) * 100}%`,
+                                                                                    top: `${(position.y / 350) * 100}%`,
+                                                                                    width: '18.75%',
+                                                                                    aspectRatio: '1 / 1',
+                                                                                    translate: '-50% -50%',
+                                                                                }}
+                                                                            >
+                                                                                <div className="relative w-full h-full">
+                                                                                    <img
+                                                                                        src={getCharmImageUrl(charmInstance.charm)}
+                                                                                        alt={charmInstance.charm.name}
+                                                                                        className="w-full h-full object-contain drop-shadow-sm"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        )
+                                                                    })}
+                                                                </>
+                                                            )
+                                                        }
+
+                                                        return (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <Package className="w-12 h-12 text-stone-300" />
+                                                            </div>
+                                                        )
+                                                    })()}
                                                 </div>
 
                                                 <div className="p-6">

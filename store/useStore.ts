@@ -103,6 +103,10 @@ export const useStore = create<StoreState>()(
         const { selectedBracelet, selectedCharms, charmPositions, cart, editingCartItemId } = get();
         if (!selectedBracelet) return;
 
+        // #region agent log (H4)
+        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H4', location: 'store/useStore.ts:addToCart', message: 'addToCart called', data: { hasPreviewImage: !!previewImage, previewImageIsHttp: typeof previewImage === 'string' ? previewImage.startsWith('http') : false, selectedCharmsCount: selectedCharms.length, cartSizeBefore: cart.length, isEditing: !!editingCartItemId }, timestamp: Date.now() }) }).catch(() => { });
+        // #endregion
+
         const isEditing = !!editingCartItemId && cart.some((c) => c.id === editingCartItemId);
 
         if (isEditing) {

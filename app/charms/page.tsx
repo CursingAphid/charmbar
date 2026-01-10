@@ -175,6 +175,10 @@ export default function CharmsPage() {
       let previewUrl = undefined;
       const element = document.getElementById('preview-canvas-container');
 
+      // #region agent log (H1)
+      fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H1', location: 'app/charms/page.tsx:handleAddToCart', message: 'Add to cart started / capture element lookup', data: { elementFound: !!element }, timestamp: Date.now() }) }).catch(() => { });
+      // #endregion
+
       if (element) {
         try {
           // Capture the canvas
@@ -184,6 +188,10 @@ export default function CharmsPage() {
             scale: 2, // Higher quality
             logging: false,
           });
+
+          // #region agent log (H2)
+          fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H2', location: 'app/charms/page.tsx:handleAddToCart', message: 'html2canvas succeeded', data: { canvasW: (canvas as any)?.width, canvasH: (canvas as any)?.height }, timestamp: Date.now() }) }).catch(() => { });
+          // #endregion
 
           // Convert to blob
           const blob = await new Promise<Blob | null>(resolve =>
@@ -197,6 +205,10 @@ export default function CharmsPage() {
 
             const userId = user?.id || 'anonymous';
             const fileName = `${userId}/${Date.now()}-preview.png`;
+
+            // #region agent log (H2,H3)
+            fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H3', location: 'app/charms/page.tsx:handleAddToCart', message: 'Blob created; starting upload', data: { userPresent: !!user, userIdKind: user ? 'auth' : 'anon', fileNamePrefix: fileName.split('/')[0], blobSize: (blob as any)?.size }, timestamp: Date.now() }) }).catch(() => { });
+            // #endregion
 
             const { data, error } = await supabase
               .storage
@@ -214,12 +226,28 @@ export default function CharmsPage() {
                 .getPublicUrl(fileName);
 
               previewUrl = publicUrl;
+
+              // #region agent log (H3)
+              fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H3', location: 'app/charms/page.tsx:handleAddToCart', message: 'Upload ok; got publicUrl', data: { hasPreviewUrl: !!previewUrl, previewUrlHost: (() => { try { return new URL(publicUrl).host; } catch { return 'invalid'; } })() }, timestamp: Date.now() }) }).catch(() => { });
+              // #endregion
             } else {
               console.error('❌ Error uploading preview:', error);
+
+              // #region agent log (H3)
+              fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H3', location: 'app/charms/page.tsx:handleAddToCart', message: 'Upload failed', data: { hasError: !!error, errorName: (error as any)?.name, errorStatus: (error as any)?.statusCode, errorMessage: (error as any)?.message }, timestamp: Date.now() }) }).catch(() => { });
+              // #endregion
             }
+          } else {
+            // #region agent log (H2)
+            fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H2', location: 'app/charms/page.tsx:handleAddToCart', message: 'canvas.toBlob returned null', data: {}, timestamp: Date.now() }) }).catch(() => { });
+            // #endregion
           }
         } catch (captureError) {
           console.error('❌ Error capturing preview canvas:', captureError);
+
+          // #region agent log (H2)
+          fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H2', location: 'app/charms/page.tsx:handleAddToCart', message: 'html2canvas threw', data: { errName: (captureError as any)?.name, errMessage: (captureError as any)?.message }, timestamp: Date.now() }) }).catch(() => { });
+          // #endregion
         }
       }
 
