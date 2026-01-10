@@ -18,12 +18,30 @@ export async function placeOrder(items: any[], totalAmount: number) {
     fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H4', location: 'app/actions/orders.ts:placeOrder', message: 'placeOrder called', data: { userPresent: !!user, itemsCount: Array.isArray(items) ? items.length : -1, itemsWithPreviewImage: Array.isArray(items) ? items.filter((it) => !!it?.previewImage).length : -1, totalAmount }, timestamp: Date.now() }) }).catch(() => { });
     // #endregion
 
-    // 2. Insert order
+    const orderPreviewUrl =
+        Array.isArray(items)
+            ? (items.find((it) => typeof it?.previewImage === 'string' && it.previewImage.length > 0)?.previewImage ?? null)
+            : null
+
+    // Store a minimal, stable snapshot in `orders.items`:
+    // - keep bracelet + charms
+    // - drop previewImage + charmPositions (preview is stored in orders.preview_url)
+    const orderItemsSnapshot =
+        Array.isArray(items)
+            ? items.map((it) => ({
+                id: it?.id,
+                bracelet: it?.bracelet,
+                charms: it?.charms,
+            }))
+            : []
+
+    // 2. Insert order (store order-level preview_url + keep legacy `items` snapshot)
     const { data, error } = await supabase
         .from('orders')
         .insert({
             user_id: user.id,
-            items: items,
+            items: orderItemsSnapshot,
+            preview_url: orderPreviewUrl,
             total_amount: totalAmount,
             status: 'pending'
         })

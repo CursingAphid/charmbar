@@ -1,6 +1,7 @@
 import { AuthForm } from '@/components/auth/AuthForm'
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams?: { next?: string } }) {
+    const next = searchParams?.next
     return (
         <div className="h-[calc(100vh-4rem)] flex items-center justify-center relative overflow-hidden">
             {/* Background decorative elements */}
@@ -11,7 +12,7 @@ export default function LoginPage() {
             </div>
 
             <div className="relative z-10 w-full">
-                <AuthForm />
+                <AuthForm next={next} />
             </div>
         </div>
     )

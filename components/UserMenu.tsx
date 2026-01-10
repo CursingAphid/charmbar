@@ -6,6 +6,7 @@ import { User, LogOut, Package, ChevronDown, ShoppingBag } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { signout } from '@/app/actions/auth'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useStore } from '@/store/useStore'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface UserMenuProps {
@@ -16,6 +17,8 @@ export function UserMenu({ user }: UserMenuProps) {
     const { t } = useLanguage()
     const [isOpen, setIsOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
+    const clearSelection = useStore((state) => state.clearSelection)
+    const clearCart = useStore((state) => state.clearCart)
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -77,6 +80,9 @@ export function UserMenu({ user }: UserMenuProps) {
                             <button
                                 onClick={async () => {
                                     setIsOpen(false)
+                                    // Clear client-side state before signing out
+                                    clearSelection()
+                                    clearCart()
                                     await signout()
                                 }}
                                 className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors"

@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { login, signup, signInWithGoogle } from '@/app/actions/auth'
-import { Loader2, Mail, Lock, User, Github } from 'lucide-react'
+import { Loader2, Mail, Lock, User, Github, Sparkles } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import Button from '@/components/ui/Button'
 
-export function AuthForm() {
+export function AuthForm({ next }: { next?: string }) {
     const [isLogin, setIsLogin] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+    const safeNext = next && next.startsWith('/') ? next : '/orders'
 
     const { t } = useLanguage()
 
@@ -44,17 +46,20 @@ export function AuthForm() {
 
     const handleGoogleLogin = async () => {
         setIsLoading(true)
-        await signInWithGoogle()
+        await signInWithGoogle(safeNext)
     }
 
     return (
         <div className="w-full max-w-md mx-auto p-6">
             <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/50">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-light text-stone-800 mb-2">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-600">
+                        <Sparkles className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-stone-800 mb-2">
                         {isLogin ? t('auth.welcome') : t('auth.join')}
                     </h2>
-                    <p className="text-stone-500 font-light">
+                    <p className="text-stone-500 font-medium">
                         {isLogin
                             ? t('auth.signin.desc')
                             : t('auth.signup.desc')}
@@ -99,6 +104,7 @@ export function AuthForm() {
                 </div>
 
                 <form action={handleSubmit} className="space-y-4">
+                    <input type="hidden" name="next" value={safeNext} />
                     {!isLogin && (
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 w-5 h-5" />
@@ -158,14 +164,15 @@ export function AuthForm() {
                         )}
                     </AnimatePresence>
 
-                    <button
+                    <Button
                         type="submit"
+                        fullWidth
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-amber-200 to-amber-400 hover:from-amber-300 hover:to-amber-500 text-amber-950 font-medium py-3 px-4 rounded-xl shadow-lg shadow-amber-200/50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex items-center justify-center gap-2"
                     >
                         {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                         {isLogin ? t('auth.submit.signin') : t('auth.submit.signup')}
-                    </button>
+                    </Button>
                 </form>
 
                 <div className="mt-6 text-center">

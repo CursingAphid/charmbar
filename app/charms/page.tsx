@@ -203,8 +203,13 @@ export default function CharmsPage() {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
 
-            const userId = user?.id || 'anonymous';
-            const fileName = `${userId}/${Date.now()}-preview.png`;
+            if (!user) {
+              showToast('Please sign in to save your preview and add to cart.', 'error');
+              router.push('/login?next=/charms');
+              return;
+            }
+
+            const fileName = `${user.id}/${Date.now()}-preview.png`;
 
             // #region agent log (H2,H3)
             fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H3', location: 'app/charms/page.tsx:handleAddToCart', message: 'Blob created; starting upload', data: { userPresent: !!user, userIdKind: user ? 'auth' : 'anon', fileNamePrefix: fileName.split('/')[0], blobSize: (blob as any)?.size }, timestamp: Date.now() }) }).catch(() => { });

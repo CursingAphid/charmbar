@@ -35,7 +35,30 @@ export async function updateSession(request: NextRequest) {
     )
 
     // refreshing the auth token
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Protect editor + purchase flows: only authenticated users can access these routes
+    const pathname = request.nextUrl.pathname
+    const isProtected =
+        pathname.startsWith('/charms') ||
+        pathname.startsWith('/cart') ||
+        pathname.startsWith('/checkout')
+
+    if (isProtected && !user) {
+        const redirectUrl = request.nextUrl.clone()
+
+        // Special interstitial for editor flow
+        if (pathname.startsWith('/charms')) {
+            redirectUrl.pathname = '/get-started'
+            redirectUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
+        } else {
+            // Standard redirect to login for other protected routes
+            redirectUrl.pathname = '/login'
+            redirectUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
+        }
+
+        return NextResponse.redirect(redirectUrl)
+    }
 
     return response
 }

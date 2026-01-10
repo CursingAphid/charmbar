@@ -70,6 +70,7 @@ create table orders (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid references auth.users(id),
   items jsonb not null, -- Stores the cart snapshot including custom preview_image URLs
+  preview_url text, -- Public URL to a preview image in the 'previews' storage bucket (order-level)
   total_amount numeric(10, 2) not null,
   status text not null default 'pending', -- pending, completed, cancelled, shipping
   created_at timestamptz default now()
@@ -155,12 +156,3 @@ create policy "Public Access Bracelets"
 -- create policy "Authenticated Insert Bracelets"
 --   on storage.objects for insert
 --   with check ( bucket_id = 'bracelets' and auth.role() = 'authenticated' );
--- (Optional) Anomymous Uploads for Previews?
--- If you want guests to add to cart without login:
-create policy "Guest Insert Previews"
-  on storage.objects for insert
-  with check (
-    bucket_id = 'previews'
-    and auth.role() = 'anon'
-    and (name like '%.png' or name like '%.jpg' or name like '%.jpeg')
-  );

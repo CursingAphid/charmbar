@@ -29,6 +29,14 @@ const translations = {
     'home.continue': 'Continue to Charms →',
     'home.inProgress': 'You are currently designing a bracelet!',
     'home.inProgressButton': 'Continue Designing →',
+
+    // Get Started
+    'getStarted.title': 'Start Designing',
+    'getStarted.description': 'Before you can create your custom bracelet, you need to make an account.',
+    'getStarted.subtitle': 'Just your name, email and a password. That\'s it!',
+    'getStarted.button': 'Create Account / Login',
+    'getStarted.loginLink': 'Already have an account? The button above works for login too.',
+
     'home.featured.title': 'Featured Charms',
     'home.featured.add': 'Add',
     'home.featured.added': 'Added',
@@ -99,8 +107,8 @@ const translations = {
     // Auth
     'auth.welcome': 'Welcome Back',
     'auth.join': 'Join Us',
-    'auth.signin.desc': 'Sign in to access your orders',
-    'auth.signup.desc': 'Create an account to track your orders',
+    'auth.signin.desc': 'Sign in to place and view your orders',
+    'auth.signup.desc': 'Create an account to place and track your orders',
     'auth.email': 'Email address',
     'auth.password': 'Password',
     'auth.fullname': 'Full Name',
@@ -115,6 +123,7 @@ const translations = {
 
     // Orders
     'orders.title': 'Your Orders',
+    'orders.disclaimer': 'Note: The digital preview may show slight variations in charm positioning. Rest assured, your bracelet will be handcrafted to match your custom design perfectly.',
     'orders.order': 'Order',
     'orders.date': 'Date',
     'orders.total': 'Total',
@@ -140,6 +149,14 @@ const translations = {
     'home.continue': 'Ga Door Naar Charms →',
     'home.inProgress': 'Je bent al bezig met het ontwerpen van een armband!',
     'home.inProgressButton': 'Verder Ontwerpen →',
+
+    // Get Started
+    'getStarted.title': 'Begin Met Ontwerpen',
+    'getStarted.description': 'Voordat je jouw persoonlijke armband kunt maken, moet je een account aanmaken.',
+    'getStarted.subtitle': 'Alleen je naam, e-mail en een wachtwoord. Dat is alles!',
+    'getStarted.button': 'Account Aanmaken / Inloggen',
+    'getStarted.loginLink': 'Heb je al een account? De knop hierboven werkt ook voor inloggen.',
+
     'home.featured.title': 'Uitgelichte Charms',
     'home.featured.add': 'Toevoegen',
     'home.featured.added': 'Toegevoegd',
@@ -210,8 +227,8 @@ const translations = {
     // Auth
     'auth.welcome': 'Welkom Terug',
     'auth.join': 'Doe Mee',
-    'auth.signin.desc': 'Log in om je bestellingen te bekijken',
-    'auth.signup.desc': 'Maak een account aan om je bestellingen te volgen',
+    'auth.signin.desc': 'Log in om een bestelling te plaatsen en bekijken',
+    'auth.signup.desc': 'Maak een account aan om een bestelling te plaatsen en volgen',
     'auth.email': 'E-mailadres',
     'auth.password': 'Wachtwoord',
     'auth.fullname': 'Volledige Naam',
@@ -226,6 +243,7 @@ const translations = {
 
     // Orders
     'orders.title': 'Jouw Bestellingen',
+    'orders.disclaimer': 'Let op: Het digitale voorbeeld kan kleine variaties in de plaatsing van de charms vertonen. Wees gerust, je armband wordt met de hand gemaakt om perfect aan je ontwerp te voldoen.',
     'orders.order': 'Bestelling',
     'orders.date': 'Datum',
     'orders.total': 'Totaal',

@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
+import { Package, Clock, CheckCircle, XCircle, ArrowRight, Info } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { getBraceletSnapPoints, DEFAULT_SNAP_POINTS } from '@/lib/braceletSnapPoints'
-import { getCharmImageUrl, Charm } from '@/lib/db'
+import { Charm } from '@/lib/db'
 
 interface SelectedCharm {
     id: string
@@ -33,6 +32,7 @@ interface Order {
     total_amount: number
     status: string
     items: CartItem[]
+    preview_url?: string
 }
 
 interface OrdersListProps {
@@ -84,65 +84,35 @@ export default function OrdersList({ orders }: OrdersListProps) {
                                         {order.status === 'cancelled' && <div className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold uppercase tracking-wide rounded-full flex items-center gap-1"><XCircle className="w-3 h-3" /> {t('orders.status')}</div>}
                                     </div>
                                 </div>
-
                                 <div className="p-6">
+                                    <div className="flex items-start gap-3 bg-amber-50/50 border border-amber-100 p-4 rounded-2xl mb-6">
+                                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                        <p className="text-sm text-amber-900/80 font-medium leading-relaxed">
+                                            {t('orders.disclaimer')}
+                                        </p>
+                                    </div>
                                     <h4 className="text-sm font-medium text-stone-900 mb-4">{t('orders.items')}</h4>
                                     <div className="space-y-6">
-                                        {(order.items as CartItem[]).map((item, index) => (
+                                        {((order.items as CartItem[]) || []).map((item, index) => (
                                             <div key={index} className="bg-stone-50 rounded-2xl overflow-hidden border border-stone-200">
                                                 {/* Large Preview Image */}
                                                 <div className="w-full aspect-[800/350] bg-white border-b border-stone-200 relative p-4">
                                                     {(() => {
-                                                        const hasPreviewImage = !!item.previewImage
-                                                        const charmPositions = (item as any)?.charmPositions as Record<string, number> | undefined
-                                                        const canRenderOverlay = !hasPreviewImage && !!item?.bracelet?.image && !!charmPositions && Array.isArray(item?.charms) && item.charms.length > 0
+                                                        const previewUrlFromDb = order.preview_url
 
                                                         // #region agent log (H5)
-                                                        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'H5', location: 'components/OrdersList.tsx:renderPreview', message: 'Order item preview render decision', data: { hasPreviewImage, canRenderOverlay, charmsCount: item?.charms?.length ?? -1 }, timestamp: Date.now() }) }).catch(() => { });
+                                                        fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'H5', location: 'components/OrdersList.tsx:renderPreview', message: 'Order preview render decision', data: { hasPreviewUrlFromDb: !!previewUrlFromDb }, timestamp: Date.now() }) }).catch(() => { });
                                                         // #endregion
 
-                                                        if (hasPreviewImage) {
-                                                            return <img src={item.previewImage} alt="Custom Bracelet Design" className="w-full h-full object-contain" />
+                                                        if (previewUrlFromDb) {
+                                                            return <img src={previewUrlFromDb} alt="Custom Bracelet Design" className="w-full h-full object-contain" />
                                                         }
 
                                                         if (item.bracelet.image) {
                                                             const baseImage = (item as any)?.bracelet?.openImage || item.bracelet.image
-                                                            const snapPoints = getBraceletSnapPoints(item.bracelet.id) || DEFAULT_SNAP_POINTS
 
                                                             return (
-                                                                <>
-                                                                    <img src={baseImage} alt={item.bracelet.name} className="w-full h-full object-contain" />
-
-                                                                    {/* If no screenshot was saved, render a deterministic overlay preview from stored charm positions */}
-                                                                    {canRenderOverlay && item.charms.map((charmInstance) => {
-                                                                        const positionIndex = charmPositions?.[charmInstance.id]
-                                                                        if (positionIndex === undefined) return null
-                                                                        const position = snapPoints[positionIndex]
-                                                                        if (!position) return null
-
-                                                                        return (
-                                                                            <div
-                                                                                key={charmInstance.id}
-                                                                                className="absolute z-10 pointer-events-none"
-                                                                                style={{
-                                                                                    left: `${(position.x / 800) * 100}%`,
-                                                                                    top: `${(position.y / 350) * 100}%`,
-                                                                                    width: '18.75%',
-                                                                                    aspectRatio: '1 / 1',
-                                                                                    translate: '-50% -50%',
-                                                                                }}
-                                                                            >
-                                                                                <div className="relative w-full h-full">
-                                                                                    <img
-                                                                                        src={getCharmImageUrl(charmInstance.charm)}
-                                                                                        alt={charmInstance.charm.name}
-                                                                                        className="w-full h-full object-contain drop-shadow-sm"
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-                                                                        )
-                                                                    })}
-                                                                </>
+                                                                <img src={baseImage} alt={item.bracelet.name} className="w-full h-full object-contain" />
                                                             )
                                                         }
 

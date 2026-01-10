@@ -5,9 +5,10 @@ import { ShoppingCart, Languages, User as UserIcon } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserMenu } from './UserMenu';
 import type { User } from '@supabase/supabase-js';
+import { usePathname } from 'next/navigation';
 
 interface NavbarClientProps {
     user: User | null;
@@ -18,6 +19,10 @@ export default function NavbarClient({ user }: NavbarClientProps) {
     const cartItemCount = cart.length;
     const { language, setLanguage, t } = useLanguage();
     const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+    const pathname = usePathname();
+
+    // Determine the redirect path for login based on where the user is
+    const loginHref = pathname === '/' || pathname === '/login' ? '/login' : `/login?next=${encodeURIComponent(pathname)}`;
 
     return (
         <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
@@ -90,7 +95,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                             <UserMenu user={user} />
                         ) : (
                             <Link
-                                href="/login"
+                                href={loginHref}
                                 className="h-11 w-11 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-gray-600 hover:text-yellow-600 hover:bg-yellow-50/50 transition-colors"
                                 title={t('menu.login')}
                             >
