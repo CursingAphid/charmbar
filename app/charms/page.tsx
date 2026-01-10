@@ -175,10 +175,6 @@ export default function CharmsPage() {
       let previewUrl = undefined;
       const element = document.getElementById('preview-canvas-container');
 
-      // #region agent log (H1)
-      fetch('http://127.0.0.1:7243/ingest/571757a8-8a49-401c-b0dc-95cc19c6385f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'debug-session', runId: 'pre-fix', hypothesisId: 'H1', location: 'app/charms/page.tsx:handleAddToCart', message: 'Add to cart started / capture element lookup', data: { elementFound: !!element }, timestamp: Date.now() }) }).catch(() => { });
-      // #endregion
-
       if (element) {
         try {
           // Capture the canvas

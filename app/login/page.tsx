@@ -1,7 +1,8 @@
 import { AuthForm } from '@/components/auth/AuthForm'
 
-export default function LoginPage({ searchParams }: { searchParams?: { next?: string } }) {
-    const next = searchParams?.next
+export default async function LoginPage({ searchParams }: { searchParams?: Promise<{ next?: string }> }) {
+    const params = await searchParams
+    const next = params?.next
     return (
         <div className="h-[calc(100vh-4rem)] flex items-center justify-center relative overflow-hidden">
             {/* Background decorative elements */}

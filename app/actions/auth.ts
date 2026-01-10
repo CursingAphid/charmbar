@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
     const requestedNext = formData.get('next') as string | null
     const next = requestedNext && requestedNext.startsWith('/') ? requestedNext : '/orders'
 
-    console.log(`🔑 Login action: next is "${next}" (requested: "${requestedNext}")`)
+    console.log(`🔑 Login action: email="${email}", requestedNext="${requestedNext}", next="${next}"`)
 
     const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -21,9 +21,11 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
+        console.log(`❌ Login failed: ${error.message}`)
         return { error: error.message }
     }
 
+    console.log(`✅ Login successful, redirecting to: ${next}`)
     revalidatePath('/', 'layout')
     redirect(next)
 }
