@@ -4,15 +4,7 @@ import Link from 'next/link'
 import { Package, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getBraceletSnapPoints, DEFAULT_SNAP_POINTS } from '@/lib/braceletSnapPoints'
-import { getCharmImageUrl } from '@/lib/db'
-
-interface Charm {
-    id: string
-    name: string
-    price: number
-    image: string
-    image_url?: string
-}
+import { getCharmImageUrl, Charm } from '@/lib/db'
 
 interface SelectedCharm {
     id: string
